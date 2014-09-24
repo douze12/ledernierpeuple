@@ -1,0 +1,180 @@
+/**
+ *------
+ * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
+ * LeDernierPeuple implementation : © <Your name here> <Your email address here>
+ *
+ * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
+ * See http://en.boardgamearena.com/#!doc/Studio for more information.
+ * -----
+ *
+ * ledernierpeuple.css
+ *
+ * LeDernierPeuple stylesheet
+ *
+ */
+
+/*
+    This is the CSS stylesheet of your game User Interface.
+    
+    Styles defined on this file will be applied to the HTML elements you define in your
+    HTML template (ledernierpeuple_ledernierpeuple.tpl), and to HTML elements you create dynamically
+    (in ledernierpeuple.js).
+    
+    Usually, you are using CSS to:
+    
+    1°) define the overall layout of your game
+        (ex: place the board on the top left, place player's hand beside, place the deck on the right, ...).
+
+    2°) create your CSS-sprites:
+        All images of your games should be gathered into a small number of image files. Then, using
+        background-image and background-position CSS properties, you create HTML blocks that can 
+        display these images correctly (see example below).
+    
+    3°) ... anything else:
+        It is really easy to add and remove CSS classes dynamically from your Javascript with
+        dojo.addClass and dojo.removeClass. It is also easy to check if an element has a class
+        (dojo.hasClass) or to get all elements with a specific class (dojo.query). This is why,
+        very often, using CSS classes for the logic of your user interface allow you to do complex
+        thing easily.
+        
+        
+     Note: on the production platform, this file will be compressed and comments will be removed.
+           Consequently, don't hesitate to put as many comments as necessary.
+*/
+
+@import url(../../../css/csslayer.css); /* Note: you must not use any @import directive other than this one */
+
+/********* You can start writing your CSS below this line: **********/
+
+
+/*
+    Example of CSS sprites (a black token and a white token, 20x20px each, embedded in the same "tokens.png" 40x20px image):
+
+    .white_token {
+        background-image: url('img/tokens.png');
+        background-position: 0px 0px;
+    }
+    .black_token {
+        background-image: url('img/tokens.png');
+        background-position: -20px 0px;
+    }
+    .token {
+        width: 20px;
+        height: 20px;
+        background-repeat: none;
+    }
+*/
+
+#board{
+	position:relative;
+	margin-left:20px;
+	margin-top: 20px;
+	display: inline-block;
+}
+
+.tile{
+	width: 72px; 
+	height: 100px;
+	background-image: url('img/tiles/all.jpg');
+	position: absolute;
+	background-repeat: no-repeat;
+	border : 1px solid #000000;
+}
+
+.tile.possibleMove{
+	border : 2px solid #AADEDE;
+	cursor:pointer;
+}
+/*
+#tile_1{
+	background-image: url('img/tiles/tileSpecies1.png') !important;
+}
+#tile_5{
+	background-image: url('img/tiles/tileSpecies5.png') !important;
+}
+#tile_9{
+	background-image: url('img/tiles/tileSpecies9.png') !important;
+}
+#tile_13{
+	background-image: url('img/tiles/tileSpecies13.png') !important;
+}
+#tile_17{
+	background-image: url('img/tiles/tileSpecies17.png') !important;
+}
+#tile_21{
+	background-image: url('img/tiles/tileSpecies21.png') !important;
+}
+
+#tile_3, #tile_7, #tile_11, #tile_15, #tile_19, #tile_23{
+	background-image: url('img/tiles/tileEvent.png') !important;
+}
+
+.tileNumber{
+	position:absolute;
+}
+*/
+
+.pawn{
+	width : 22px;
+	height: 29px;
+	margin-left : 5px;
+	margin-top:5px;
+	display: inline-table;
+}
+
+.pawn_0065AE{
+	background-image: url('img/pawns/pawn_0065AE.png');
+}
+
+.pawn_009E48{
+	background-image: url('img/pawns/pawn_009E48.png');
+}
+
+.pawn_888888{
+	background-image: url('img/pawns/pawn_888888.png');
+}
+
+.pawn_D40000{
+	background-image: url('img/pawns/pawn_D40000.png');
+}
+
+.pawn_D40000{
+	background-image: url('img/pawns/pawn_D40000.png');
+}
+
+.pawn_040404{
+	background-image: url('img/pawns/pawn_040404.png');
+}
+
+#cards{
+	position: relative;
+}
+
+.card{
+	width : 100px;
+	height: 139px;	
+	background-image: url('img/cards/all.jpg');
+	display: inline-table;
+	margin-left : 10px;
+}
+
+.card.canChoose{
+	cursor:pointer;
+}
+
+#chosenCard{
+	width : 100px;
+	height: 139px;	
+	background-image: url('img/cards/all.jpg');
+	float : right;
+	display:none;
+	margin-right : 50px;
+	margin-top : 50px;
+}
+
+#skipLink{
+	color:red;
+	cursor:pointer;
+}
+
+
