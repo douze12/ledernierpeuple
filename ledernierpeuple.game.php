@@ -148,7 +148,7 @@ class LeDernierPeuple extends Table
         $result['pawns'] = self::getCollectionFromDb( $sql );
 		
 		//get the cards of the player
-        $sql = "SELECT cardOrder,moveType,moveShift,teleportTile FROM card where location = '".$current_player_id."' order by cardOrder";
+        $sql = "SELECT cardOrder,moveType,moveShift,teleportTile FROM card where location = '".$current_player_id."' and chosen=0 order by cardOrder";
         $result["cards"] = self::getCollectionFromDb( $sql );
 		
   
@@ -301,100 +301,64 @@ class LeDernierPeuple extends Table
 			$playerNameAttacked = $result2["player_name"];
 			$playerIdAttacked = $result2["player_id"];
 			
-			//if the pawn belong to the player who is attacked and he has his second pawn on the other tile
-			//he earns 2 points
-			if($playerIdAttacked == $pawnPlayerId){
-				//check in base if another pawn which belong to the same player is on the tile
-				$sql = "select * from pawn where tileId=".$otherTileId." and playerId = ".$playerIdAttacked.' and id != '.$pawnId;
-				$result = self::getObjectFromDb( $sql );
+			//check in base if another pawn is on the tile on the other side
+			$sql = "select * from pawn where tileId=".$otherTileId." and id != ".$pawnId;
+			$result = self::getCollectionFromDb( $sql );
+			
+			if($result != null && count($result) > 0){
 				
-				//if there is a result, the player earns 2 points
-				if($result != null){
-					$sql="update player set player_score=player_score+2 where player_id=".$pawnPlayerId;
-					self::DbQuery( $sql );
+				self::debug( "Attack player ".$playerNameAttacked );
+				
+				//if there are just 1 result, no choice, we can attack directly
+				if(count($result) == 1){
+					$otherPawn = reset($result);
 					
-					$this->log('${playerName} earns 2 points', array("playerName"=>$pawnPlayerName));
+					self::debug( "Attack with player ".$otherPawn["playerId"] );
 					
-					//notify the new scores
-					$newScores = self::getCollectionFromDb( "SELECT player_id, player_score FROM player", true );
-			        self::notifyAllPlayers( "newScores", "", array(
-			            "scores" => $newScores
-			        ) );
+					//we get the name of the player who helps to attack
+					$sql = "select player_name from player p where p.player_id=".$otherPawn["playerId"];
+					$result = self::getObjectFromDb($sql);
+					$playerNameHelper = $result["player_name"];
+					
+
+					$this->attack(array("id"=>$playerId, "name"=>$playerName), 
+									  array("id"=>$pawnPlayerId, "name"=>$pawnPlayerName),
+									  array("id"=>$playerIdAttacked, "name"=>$playerNameAttacked),
+									  array("id"=>$otherPawn["playerId"], "name"=>$playerNameHelper));
+					
+					
 					
 					//we add the two pawns to be teleported after the move
 					$teleportPawns[] = $pawnId;
-					$teleportPawns[] = $result["id"];
+					$teleportPawns[] = $otherPawn["id"];
 					
 					$attackFlag = TRUE;
 				}
-			}
-			else{
-				//check in base if another pawn that don't belong to the attacked player is on the tile
-				$sql = "select * from pawn where tileId=".$otherTileId." and playerId != ".$playerIdAttacked.' and id != '.$pawnId;
-				$result = self::getCollectionFromDb( $sql );
-				
-				if($result != null && count($result) > 0 && $pawnPlayerId != $playerIdAttacked){
-					
-					self::debug( "Attack player ".$playerNameAttacked );
-					
-					//if there are just 1 result, no choice, we can attack directly
-					if(count($result) == 1){
-						$otherPawn = reset($result);
-						
-						self::debug( "Attack with player ".$otherPawn["playerId"] );
-						
-						//the player attacks with his two pawns
-						if($otherPawn["playerId"] == $pawnPlayerId){
-								
-							$this->attack(array("id"=>$playerId, "name"=>$playerName),
-										  array("id"=>$pawnPlayerId, "name"=>$pawnPlayerName),  
-										  array("id"=>$playerIdAttacked, "name"=>$playerNameAttacked));
-						}
-						else {
-								
-							//we get the name of the player who helps to attack
-							$sql = "select player_name from player p where p.player_id=".$otherPawn["playerId"];
-							$result = self::getObjectFromDb($sql);
-							$playerNameHelper = $result["player_name"];
-							
+				//we have more than one pawn on the other tile
+				else{
+					//we need to check if the player who made the attack owns one of the pawns on the other tile
+					//if he does, he automatically attacks with it
+					$attack = FALSE;
+					foreach ($result as $pawn) {
+						if($pawn["playerId"] == $playerId){
 							$this->attack(array("id"=>$playerId, "name"=>$playerName), 
 										  array("id"=>$pawnPlayerId, "name"=>$pawnPlayerName),
-										  array("id"=>$playerIdAttacked, "name"=>$playerNameAttacked),
-										  array("id"=>$otherPawn["playerId"], "name"=>$playerNameHelper));
-	
+									  	  array("id"=>$playerIdAttacked, "name"=>$playerNameAttacked),
+										  array("id"=>$playerId, "name"=>$playerName));
+							$attack = TRUE;
+							
+							//we add the two pawns to be teleported after the move
+							$teleportPawns[] = $pawnId;
+							$teleportPawns[] = $pawn["id"];
+							
+							$attackFlag = TRUE;
+							
+							break;
 						}
-						
-						//we add the two pawns to be teleported after the move
-						$teleportPawns[] = $pawnId;
-						$teleportPawns[] = $otherPawn["id"];
-						
-						$attackFlag = TRUE;
 					}
-					//we have more than one pawn on the other tile
-					else{
-						//we need to check if the player who made the attack owns one of the pawns on the other tile
-						//if he does, he automatically attacks with it
-						$attack = FALSE;
-						foreach ($result as $pawn) {
-							if($pawn["playerId"] == $playerId){
-								$this->attack(array("id"=>$playerId, "name"=>$playerName), 
-											  array("id"=>$pawnPlayerId, "name"=>$pawnPlayerName),
-										  	  array("id"=>$playerIdAttacked, "name"=>$playerNameAttacked));
-								$attack = TRUE;
-								
-								//we add the two pawns to be teleported after the move
-								$teleportPawns[] = $pawnId;
-								$teleportPawns[] = $pawn["id"];
-								
-								$attackFlag = TRUE;
-								
-								break;
-							}
-						}
-						//if the pawns on the other tile does'nt belong to the active player, he has to make a choice
-						if(!$attack){
-							$chooseCombinationFlag = TRUE;
-						}
+					//if the pawns on the other tile does'nt belong to the active player, he has to make a choice
+					if(!$attack){
+						$chooseCombinationFlag = TRUE;
 					}
 				}
 			}
@@ -445,83 +409,69 @@ class LeDernierPeuple extends Table
 	 * $playerAttacked : The player being attacked
 	 * $playerHelper : The player who own the pawn at the other side of the attack if this player is not the same player as $pawnPlayer
 	 */
-	function attack($playerAttack, $pawnPlayer, $playerAttacked, $playerHelper = NULL){
+	function attack($playerAttack, $pawnPlayer, $playerAttacked, $playerHelper){
 		//nb points earn by the pawnPlayer
 		$pointsEarn = 0;
 		//nb points earn by the helper
 		$helperPointsEarn = 0;
 		
-		if(is_null($playerHelper)){
-			$pointsEarn = 3;
+		//put the names of the players on an array 
+		$playerNames = array();
+		$playerNames[$playerAttack["id"]] = $playerAttack["name"];
+		$playerNames[$pawnPlayer["id"]] = $pawnPlayer["name"];
+		$playerNames[$playerAttacked["id"]] = $playerAttacked["name"];
+		$playerNames[$playerHelper["id"]] = $playerHelper["name"];
+		
+		self::debug( "Attack! PlayerAttack : ".implode(",",$playerAttack) );
+		self::debug( "PawnPlayer : ".implode(",",$pawnPlayer) );
+		self::debug( "PlayerAttacked : ".implode(",",$playerAttacked) );
+		self::debug( "PlayerHelper : ".implode(",",$playerHelper) );
+		
+		//compute the points earns/loses
+		$points = array();
+		//points earns
+		if($pawnPlayer["id"] == $playerHelper["id"]){
+			$points[$pawnPlayer["id"]] = 3;
 		}
-		else {
-				
-			//if the active player moves another player's pawn and the attack is launched with the pawn 
-			//of the active player, the active player earns 2 points and the other player earns 1 point 
-			if($playerAttack["id"] == $playerHelper["id"]){
-				$helperPointsEarn = 2;
-				$pointsEarn = 1;
-			}
-			//in other case, the helper earns 1 points and the launcher earns 2 points
-			else{
-				$helperPointsEarn = 1;
-				$pointsEarn = 2;
-			}
-			
-			//update the score of the helper player
-			$sql="update player set player_score=player_score+".$helperPointsEarn." where player_id=".$playerHelper["id"];
-			self::DbQuery( $sql );
-			
-		}
-		
-		//update the score of the active player who made the attack
-		$sql="update player set player_score=player_score+".$pointsEarn." where player_id=".$pawnPlayer["id"];
-		self::DbQuery( $sql );
-		
-		//update the score of the attacked player
-		$sql="update player set player_score=player_score-1 where player_score >= 1 and player_id=".$playerAttacked["id"];
-		self::DbQuery( $sql );
-		
-		//LOGS
-		if(is_null($playerHelper)){
-			//the active player launch the attack with one of his pawn
-			if($pawnPlayer["id"] == $playerAttack["id"]){
-				$this->log('${playerName} attacks ${playerNameAttacked}', array(
-					"playerName" => $playerAttack["name"],"playerNameAttacked" => $playerAttacked["name"]));	
-			}
-			//the active player launch the attack with the pawn of another player  
-			else {
-				$this->log('${playerName} attacks with the pawn of ${pawnPlayerName} on ${playerNameAttacked}', array(
-					"playerName" => $playerAttack["name"],"playerNameAttacked" => $playerAttacked["name"],
-					"pawnPlayerName" => $pawnPlayer["name"]));	
-			}
+		else if ($playerAttack["id"] == $playerHelper["id"]){
+			$points[$playerAttack["id"]] = 2;
+			$points[$pawnPlayer["id"]] = 1;
 		}
 		else{
-			//the active player launch the attack with one of his pawn with the help of another player
-			if($pawnPlayer["id"] == $playerAttack["id"]){
-				$this->log('${playerName} attacks ${playerNameAttacked} with the help of ${playerNameHelper}', array(
-					"playerName" => $playerAttack["name"],"playerNameAttacked" => $playerAttacked["name"],
-					"playerNameHelper" => $playerHelper["name"]));
-			}
-			//the active player launch the attack with the pawn of another player with the help of another player
-			else {
-				$this->log('${playerName} attacks ${playerNameAttacked} with the pawn of ${pawnPlayerName} helped by ${playerNameHelper}', array(
-					"playerName" => $playerAttack["name"],"playerNameAttacked" => $playerAttacked["name"],
-					"playerNameHelper" => $playerHelper["name"], "pawnPlayerName" => $pawnPlayer["name"]));
-			}
+			$points[$playerHelper["id"]] = 1;
+			$points[$pawnPlayer["id"]] = 2;
 		}
-					
-    	$this->log( '${pawnPlayerName} earns '.$pointsEarn.' points', array(
-            "pawnPlayerName" => $pawnPlayer["name"] ));
-		
-		if(!is_null($playerHelper)){
-			$this->log( '${playerNameHelper} earns '.$helperPointsEarn.' points', array(
-            	"playerNameHelper" => $playerHelper["name"] ));	
+		//points loses
+		if(array_key_exists($playerAttacked["id"], $points)){
+			$points[$playerAttacked["id"]] = $points[$playerAttacked["id"]] - 1; 
+		}
+		else{
+			$points[$playerAttacked["id"]] = -1;
 		}
 		
-    	$this->log('${playerNameAttacked} loses 1 point', array(
-            "playerNameAttacked" => $playerAttacked["name"] ));
-            
+		self::debug( "Points : ".implode(",",$points) );
+		
+		foreach ($points as $id => $point) {
+			
+			if($point > 0){
+				//update the score
+				$sql="update player set player_score=player_score+".$point." where player_id=".$id;
+				self::DbQuery( $sql );
+				//log
+				$this->log('Player ${playerName} earns ${points} point(s)', 
+							array("playerName" => $playerNames[$id], "points" => $point));	
+			}
+			else{
+				//update the score
+				$sql="update player set player_score=player_score".$point." where player_id=".$id." and player_score > 0";
+				self::DbQuery( $sql );
+				//log
+				$this->log('Player ${playerName} loses ${points} point(s)', 
+							array("playerName" => $playerNames[$id], "points" => abs($point)));
+			}
+			
+		}
+		
         
 		//notify the new scores
 		$newScores = self::getCollectionFromDb( "SELECT player_id, player_score FROM player", true );
