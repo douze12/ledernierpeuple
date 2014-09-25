@@ -25,16 +25,22 @@
     Please REMOVE this comment before publishing your game on BGA
 -->
 
-<div>
-	<div id="board">
-		<div id="tiles"></div>
-	</div>
-	<div id="chosenCard"></div>
-</div>
-<div id="deck" class="whiteblock">
-	<h3>Deck</h3>
-	<div id="cards"></div>
-</div>
+<table id="gameTable">
+	<tr>
+		<td>
+			<div id="board">
+				<div id="tiles"></div>
+			</div>
+			<div id="chosenCard"></div>
+		</td>
+		<td style="width:100%">
+			<div id="deck" class="whiteblock">
+				<h3>Deck</h3>
+				<div id="cards"></div>
+			</div>
+		</td>
+	</tr>
+</table>
 
 
 <script type="text/javascript">

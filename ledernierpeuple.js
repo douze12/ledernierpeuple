@@ -94,12 +94,12 @@ function (dojo, declare) {
         	var nbTiles = this.countElements(tiles);
         	
         	//space between tiles
-        	var tileWidth = 74 + 6;
+        	var tileWidth = 72 + 6;
         	var tileHeight = 100;
         	
         	//coordinates of the first tile
         	var top = 0;
-            var left = (nbTiles / 4) * tileWidth;
+            var left = (nbTiles / 4) * 72;
             
             var angle = 0;
             
@@ -151,6 +151,10 @@ function (dojo, declare) {
            //then, we determine the size of the board
            $("board").style.width = panelWidth + "px";
            $("board").style.height = panelHeight + "px";
+           
+           //set the location of the card selected div
+           $("chosenCard").style.left = (panelWidth / 2) - (100 / 2) + 10 + "px";
+           $("chosenCard").style.top = (panelHeight / 2) - (139 / 2) + "px";
         },
         
         /**

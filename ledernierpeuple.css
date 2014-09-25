@@ -65,11 +65,18 @@
     }
 */
 
+#gameTable{
+	width: 100%;
+}
+
+#gameTable td{
+	vertical-align: top;
+}
+
 #board{
 	position:relative;
-	margin-left:20px;
-	margin-top: 20px;
 	display: inline-block;
+	margin-right: 20px;
 }
 
 .tile{
@@ -85,34 +92,7 @@
 	border : 2px solid #AADEDE;
 	cursor:pointer;
 }
-/*
-#tile_1{
-	background-image: url('img/tiles/tileSpecies1.png') !important;
-}
-#tile_5{
-	background-image: url('img/tiles/tileSpecies5.png') !important;
-}
-#tile_9{
-	background-image: url('img/tiles/tileSpecies9.png') !important;
-}
-#tile_13{
-	background-image: url('img/tiles/tileSpecies13.png') !important;
-}
-#tile_17{
-	background-image: url('img/tiles/tileSpecies17.png') !important;
-}
-#tile_21{
-	background-image: url('img/tiles/tileSpecies21.png') !important;
-}
 
-#tile_3, #tile_7, #tile_11, #tile_15, #tile_19, #tile_23{
-	background-image: url('img/tiles/tileEvent.png') !important;
-}
-
-.tileNumber{
-	position:absolute;
-}
-*/
 
 .pawn{
 	width : 22px;
@@ -165,11 +145,9 @@
 #chosenCard{
 	width : 100px;
 	height: 139px;	
-	background-image: url('img/cards/all.jpg');
-	float : right;
+	background-image: url('img/cards/all.jpg');;
 	display:none;
-	margin-right : 50px;
-	margin-top : 50px;
+	position: absolute;
 }
 
 #skipLink{
