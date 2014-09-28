@@ -66,7 +66,7 @@ class LeDernierPeuple extends Table
         // The default below is red/green/blue/orange/brown
         // The number of colors defined here must correspond to the maximum number of players allowed for the gams
         $default_colors = array( "0065AE", "888888", "D40000", "009E48", "D76000", "040404" );
-
+		
  
         // Create players
         // Note: if you added some extra field on "player" table in the database (dbmodel.sql), you can initialize it there.
@@ -134,10 +134,14 @@ class LeDernierPeuple extends Table
     
         // Get information about players
         // Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
-        $sql = "SELECT player_id id, player_score score FROM player ";
+        $sql = "SELECT player_id id FROM player ";
         $result['players'] = self::getCollectionFromDb( $sql );
   
         // TODO: Gather all information about current game situation (visible by player $current_player_id).
+        
+        //get the score of the current player
+        $sql = "SELECT player_score score FROM player where player_id=".$current_player_id;
+       	$result['players'][$current_player_id]["score"] = self::getUniqueValueFromDB( $sql );
         
         //get the tiles
         $sql = "SELECT * FROM tile order by id";
@@ -461,7 +465,7 @@ class LeDernierPeuple extends Table
 				$this->log('Player ${playerName} earns ${points} point(s)', 
 							array("playerName" => $playerNames[$id], "points" => $point));	
 			}
-			else{
+			else if ($point < 0){
 				//update the score
 				$sql="update player set player_score=player_score".$point." where player_id=".$id." and player_score > 0";
 				self::DbQuery( $sql );
@@ -470,14 +474,18 @@ class LeDernierPeuple extends Table
 							array("playerName" => $playerNames[$id], "points" => abs($point)));
 			}
 			
+			//notify the new score to the player concerned
+			if($point != 0){
+				//notify the new scores
+				$newScores = self::getCollectionFromDb( "SELECT player_id, player_score FROM player where player_id=".$id, true );
+		        self::notifyPlayer( $id, "newScores", "", array(
+		            "scores" => $newScores
+		        ) );
+			}
 		}
 		
         
-		//notify the new scores
-		$newScores = self::getCollectionFromDb( "SELECT player_id, player_score FROM player", true );
-        self::notifyAllPlayers( "newScores", "", array(
-            "scores" => $newScores
-        ) );
+		
 	}
 
 
