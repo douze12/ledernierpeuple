@@ -63,7 +63,6 @@ function (dojo, declare) {
             
             //put the pawns on the board
         	this.putPawnsOnBoard(gamedatas.pawns, gamedatas.players, gamedatas.tiles);	
-        	this.createTooltips(gamedatas);
             
             //put the cards
         	this.putCards(gamedatas.cards);	
@@ -216,26 +215,6 @@ function (dojo, declare) {
         	
         },
        
-       
-       createTooltips: function(gamedatas){
-       		for(var idx in gamedatas.tiles){
-       			
-       			var tile = gamedatas.tiles[idx];
-       			var tooltipTxt = "";
-       			for(var pawnIdx in gamedatas.pawns){
-       				
-       				var pawn = gamedatas.pawns[pawnIdx];
-       				
-       				if(pawn.tileId == tile.id){
-       					tooltipTxt += "<p>" + _('Player')+ " "+ gamedatas.players[pawn.playerId].name + "</p>";
-       				}
-       			}
-       			if(tooltipTxt.length != 0){
-       				this.addTooltip( 'tile_'+tile.id, tooltipTxt, '');
-       			}
-       		}
-       	
-       },
        
        updatePossibleMoves: function(possibleMoves){
        		this.possibleMoves = possibleMoves;
