@@ -247,6 +247,15 @@ function (dojo, declare) {
        	
        },
        
+       updateCombination: function(possibleCombination){
+       		this.possibleCombination = possibleCombination;
+       		for(var pawnId in possibleCombination){
+       			var pawnElt = dojo.byId('pawn_'+pawnId);
+       			dojo.setStyle(pawnElt, {cursor : 'pointer'});
+   				pawnElt.onclickCombinationListener = dojo.connect(pawnElt, 'onclick', this, 'onChooseCombinationClick');
+       		}
+       },
+       
        showChosenCard : function(cardId){
        		var bgPosition = (cardId - 1) * -100;
        		dojo.setStyle("chosenCard", {backgroundPosition : bgPosition+"px", display:"block"});
@@ -303,8 +312,7 @@ function (dojo, declare) {
            		}
            		break;
            	case 'chooseCard':
-           		//this.showDeck();
-           		//alert("stop");
+           	
            		if(args.active_player == this.player_id){
            			dojo.connect(dojo.byId("skipLink"), 'click', this, 'onSkipClick');
            			var me = this;
@@ -315,6 +323,14 @@ function (dojo, declare) {
 				     );
            			dojo.query('.card').addClass("canChoose");
            		}
+           		break;
+           		
+           	case 'chooseCombination':
+           	
+           		if(args.active_player == this.player_id){
+           			this.updateCombination(args.args.pawnsCombination);
+           		}
+           		
            		break;
            
             case 'dummmy':
@@ -352,6 +368,19 @@ function (dojo, declare) {
 		     	dojo.query('.card').removeClass("canChoose");
           		break;
            
+           
+           	case 'chooseCombination':
+           		
+           		//disconnect listeners
+	       		for(var pawnId in this.possibleCombination){
+	       			var pawnElt = dojo.byId('pawn_'+pawnId);
+	       			dojo.setStyle(pawnElt, {cursor : 'auto'});
+	       			if(pawnElt.onclickCombinationListener){
+	       				dojo.disconnect(pawnElt.onclickCombinationListener);	
+	       			}
+	       		}
+           		
+           		break;
            
             case 'dummmy':
                 break;
@@ -544,6 +573,24 @@ function (dojo, declare) {
 				dojo.setStyle("chosenCard", {display:"none"});
             }
             
+       },
+       
+       
+       onChooseCombinationClick: function(event){
+       		// Stop this event propagation
+			dojo.stopEvent( event );
+			
+			if( this.checkAction( 'combinationChosen' ) )    // Check that this action is possible at this moment
+            {
+
+				//get the pawn id
+	            var split = event.currentTarget.id.split('_');
+	            var pawnId = split[1];
+	            
+	            this.ajaxcall( "/ledernierpeuple/ledernierpeuple/combinationChosen.html", {
+	                    pawnId:pawnId
+	                }, this, function( result ) {} );
+           	}
        },
         
         /* Example:

@@ -97,8 +97,8 @@ $machinestates = array(
 	
 	5 => array(
 			"name" => "chooseCombination",
-    		"description" => clienttranslate('${actplayer} must choose a combination'),
-    		"descriptionmyturn" => clienttranslate('${you} must choose a combination'),
+    		"description" => clienttranslate('${actplayer} must choose a pawn with wich make the attack'),
+    		"descriptionmyturn" => clienttranslate('${you} must choose a pawn with wich make the attack'),
     		"args" => "argPossibleCombination",
     		"type" => "activeplayer",
     		"possibleactions" => array( "combinationChosen" ),

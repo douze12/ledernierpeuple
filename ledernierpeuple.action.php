@@ -73,6 +73,16 @@
         $result = $this->game->skipTurn();
         self::ajaxResponse();
 	}
+	
+	/**
+	 * Method calls when the player choose a combination for an attack
+	 */
+	public function combinationChosen(){
+		self::setAjaxMode();
+		$pawnId = self::getArg( "pawnId", AT_posint, true );
+        $result = $this->game->combinationChosen($pawnId);
+        self::ajaxResponse();
+	}
 
     /*
     

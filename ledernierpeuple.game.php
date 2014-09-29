@@ -363,6 +363,9 @@ class LeDernierPeuple extends Table
 					//if the pawns on the other tile does'nt belong to the active player, he has to make a choice
 					if(!$attack){
 						$chooseCombinationFlag = TRUE;
+						$this->createPrivateParameter("otherTileId", $otherTileId);
+						$this->createPrivateParameter("playerIdAttacked", $playerIdAttacked);
+						$this->createPrivateParameter("basePawnId", $pawnId);
 					}
 				}
 			}
@@ -592,6 +595,90 @@ class LeDernierPeuple extends Table
 	
 		return $newCards;
 	}
+	
+	
+	/**
+	 * Method called when the player has chosen a combination to make the attack
+	 */
+	function combinationChosen($pawnId){
+		
+		$playerId = self::getActivePlayerId();
+		$playerName = self::getActivePlayerName();
+		
+		//get the pawn who made the attack
+		$basePawnId = $this->readParameter("basePawnId");
+		
+		//get the id of the player who is attacked
+		$playerIdAttacked = $this->readParameter("playerIdAttacked");
+		
+		//get the id of the tile where are the potential helpers
+		$otherTileId = $this->readParameter("otherTileId");
+		
+		//check the parameters
+		if($basePawnId == NULL){
+			throw new feException("No basePawnId parameter");
+		}
+		if($playerIdAttacked == NULL){
+			throw new feException("No playerIdAttacked parameter");
+		}
+		if($otherTileId == NULL){
+			throw new feException("No otherTileId parameter");
+		}
+		
+		
+		//check if the pawnId is correct
+		//get the pawns on the other tile the player can choose
+		$sql = "select * from pawn where tileId=".$otherTileId;
+		$pawnsCombination = self::getCollectionFromDB( $sql );
+		$checkPawn = FALSE;
+		foreach ($pawnsCombination as $pawnCombinationId => $value) {
+			if($pawnCombinationId == $pawnId){
+				$checkPawn = TRUE;
+			}
+		}
+		//if the pawn selected is not part of the available ones it may be a cheat so we throw an exception
+		if(!$checkPawn){
+			throw new BgaUserException( self::_("The chosen pawn is not available") );
+		}
+		
+		//get the id of the selected pawn who help the attack
+		$sql = "select player_name,player_id from pawn p, player pl where p.playerId=pl.player_id and p.id=".$pawnId;
+		$result = self::getObjectFromDb($sql);
+		$playerHelperId = $result["player_id"];
+		$playerHelperName = $result["player_name"]; 
+		
+		//get the name of the player who is attacked
+		$sql = "select player_name from player p where p.player_id=".$playerIdAttacked;
+		$playerNameAttacked = self::getUniqueValueFromDB($sql);
+		
+		//get the name and id of the player who is the source of the attack
+		$sql = "select player_name,player_id from pawn p, player pl where p.playerId=pl.player_id and p.id=".$basePawnId;
+		$result = self::getObjectFromDb($sql);
+		$pawnPlayerId = $result["player_id"];
+		$pawnPlayerName = $result["player_name"]; 
+
+		$this->attack(array("id"=>$playerId, "name"=>$playerName), 
+					  array("id"=>$pawnPlayerId, "name"=>$pawnPlayerName),
+				  	  array("id"=>$playerIdAttacked, "name"=>$playerNameAttacked),
+					  array("id"=>$playerHelperId, "name"=>$playerHelperName));
+					  
+					  
+		//teleport the pawns after the attack
+		$this->teleportAfterAttack(array($pawnId, $basePawnId));
+		
+		
+		//update the card status to put it in the trash
+		$sql = "UPDATE card set location='TRASH' where chosen=1 and location=".$playerId;
+		self::DbQuery( $sql );
+		
+		//destroy the parameters 
+		$this->destroyParameter("otherTileId");
+		$this->destroyParameter("basePawnId");
+		$this->destroyParameter("playerIdAttacked");
+		
+		// Finally, go to the next state
+        $this->gamestate->nextState( "combinationChosen" );
+	}
 
 
 	/**
@@ -779,6 +866,28 @@ class LeDernierPeuple extends Table
 			"playerId" => $playerId
 		);
     }
+    
+    
+	/**
+	 * Get the arguments for the combination the player have to choose 
+	 */
+	function argPossibleCombination(){
+		
+		$playerId = self::getActivePlayerId();
+		
+		$otherTileId = $this->readParameter("otherTileId");
+		if($otherTileId == NULL){
+			throw new feException("No otherTileId parameter");
+		}
+		
+		//get the pawns on the other tile the player can choose
+		$sql = "select * from pawn where tileId=".$otherTileId;
+		$pawnsCombination = self::getCollectionFromDB( $sql );
+		
+		return array(
+			"pawnsCombination" => $pawnsCombination
+		);
+	}
 
     
 //////////////////////////////////////////////////////////////////////////////
