@@ -66,6 +66,9 @@ function (dojo, declare) {
             
             //put the cards
         	this.putCards(gamedatas.cards);	
+        	
+        	//set the nb cards of each player in the player box
+        	this.putNbCards(gamedatas.nbCards);
  
             // Setup game notifications to handle (see "setupNotifications" method below)
             this.setupNotifications();
@@ -213,6 +216,25 @@ function (dojo, declare) {
 	            //left+=120;
         	}
         	
+        },
+
+		/**
+		 * Put the number of cards for each player in the player box information
+		 */        
+        putNbCards: function(nbCardsByPlayer){
+			for(var playerId in nbCardsByPlayer){
+				var playerScoreSpan = dojo.byId("player_score_"+playerId);
+				
+				//create html nodes
+				var nbCardHtml = '<span><span id="player_nbcard_'+playerId+'">'+nbCardsByPlayer[playerId]+'&nbsp;</span>';
+				nbCardHtml += '<div class="icon16 icon16_hand"></div>&nbsp;&bull;&nbsp;</span>';
+				
+				dojo.place(nbCardHtml, "player_score_"+playerId, "before");
+			}
+        },
+        
+        updateNbCards: function(playerId, nbCard){
+        	dojo.byId("player_nbcard_"+playerId).innerHTML = nbCard+'&nbsp;';
         },
        
        
@@ -629,6 +651,8 @@ function (dojo, declare) {
             
             dojo.subscribe('newScores', this, "notif_newScores");
             
+            dojo.subscribe('newNbCards', this, "notif_newNbCards");
+            
             dojo.subscribe('newCards', this, "notif_newCards");
             
             dojo.subscribe('teleportAfterMove', this, "notif_teleportAfterMove");
@@ -667,6 +691,15 @@ function (dojo, declare) {
             {
                 var newScore = notif.args.scores[ player_id ];
                 this.scoreCtrl[ player_id ].toValue( newScore );
+            }
+        },
+        
+        notif_newNbCards: function( notif )
+        {
+            for( var player_id in notif.args.nbCards )
+            {
+                var nbCards = notif.args.nbCards[ player_id ];
+                this.updateNbCards(player_id, nbCards);
             }
         },
         

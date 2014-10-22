@@ -155,6 +155,12 @@ class LeDernierPeuple extends Table
         $sql = "SELECT cardOrder,moveType,moveShift,teleportTile FROM card where location = '".$current_player_id."' and chosen=0 order by cardOrder";
         $result["cards"] = self::getCollectionFromDb( $sql );
 		
+		$allPlayerIds = array_keys($result['players']);
+		$sql = "SELECT location, count(*) as nbCard FROM card WHERE location IN (".implode(",", $allPlayerIds).") group by location";
+		
+		self::debug( "###QUERY : ".$sql);
+		
+		$result["nbCards"] = self::getCollectionFromDb( $sql, true );
   
         return $result;
     }
@@ -587,11 +593,21 @@ class LeDernierPeuple extends Table
 					"newCards"=>$newCards,
 					"nbCard" => count($newCards)
 					));	
+			
 		}
 		else{
 			//notify the player no more cards are available
 			$this->log("No more cards are available", array());
 		}
+		
+		
+		$sql = "select count(*) from card where location='".$playerId."'";
+		$newNbCards = self::getUniqueValueFromDB($sql);		
+		
+		//notify all players the new number of cards own by this player after the round
+		self::notifyAllPlayers( "newNbCards", "", array(
+				"nbCards"=>array($playerId => $newNbCards)
+				));	
 	
 		return $newCards;
 	}
