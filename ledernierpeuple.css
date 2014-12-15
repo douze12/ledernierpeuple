@@ -80,7 +80,7 @@
 }
 
 .tile{
-	width: 72px; 
+	width: 74px; 
 	height: 100px;
 	background-image: url('img/tiles/all.jpg');
 	position: absolute;

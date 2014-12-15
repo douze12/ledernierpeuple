@@ -17,20 +17,20 @@
 	
 	$sql ="INSERT INTO tile VALUES ";
 	$values = array();
-	for ($i=0; $i < $nbTiles; $i++) {
+	for ($i=1; $i <= $nbTiles; $i++) {
 		$tileType = "normal";
 		$speciesPlayerId = "NULL";
-		if($i % 4 == 0){
+		if($i % 4 == 2){
 			$tileType = "species";
 			$playerIds = array_keys($players);
 			$playerIdx = floor($i / 4);
 			$speciesPlayerId = $playerIds[$playerIdx];
 		}
-		else if(($i - 2) % 4 == 0){
+		else if($i % 4 == 0){
 			$tileType = "event";
 		}
 		
-		$values[] = "('".($i + 1)."','".$tileType."',".$speciesPlayerId.")";
+		$values[] = "('".$i."','".$tileType."',".$speciesPlayerId.")";
 	}
 	$sql .= implode( $values, ',' );
 	return $sql;
@@ -45,7 +45,7 @@
  	
 	$sql ="INSERT INTO pawn(playerId,tileId) VALUES ";
 	$values = array();
-	$tileId = 1;
+	$tileId = 2;
 	foreach( $players as $player_id => $player )
     {
         $values[] = "('".$player_id."','".$tileId."')";

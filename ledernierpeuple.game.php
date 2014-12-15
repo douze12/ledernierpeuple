@@ -281,18 +281,18 @@ class LeDernierPeuple extends Table
 		$chooseCombinationFlag = FALSE;
 		
 		//if we are next to a species tile, it might be an attack
-		if($tileId  % 4 == 2 || $tileId % 4 == 0){
+		if($tileId % 4 == 1 || $tileId % 4 == 3){
 			self::debug( "Potential attack" );
 			$otherTileId = -1;
 			$attackedTile = -1;
 			//we need to check if another pawn is present on the tile at the other side of the species tile
-			if($tileId  % 4 == 2) {
+			if($tileId  % 4 == 3) {
 				//id of the tile on the other side 
 				$otherTileId = $this->mod(($tileId - 3),  $nbTiles) + 1;
 				//id of the attacked tile
 				$attackedTile = $this->mod(($tileId - 2),  $nbTiles) + 1;
 			}
-			else if($tileId % 4 == 0) {
+			else if($tileId % 4 == 1) {
 				//id of the tile on the other side 
 				$otherTileId = $this->mod(($tileId + 2), $nbTiles);
 				//id of the attacked tile

@@ -96,12 +96,12 @@ function (dojo, declare) {
         	var nbTiles = this.countElements(tiles);
         	
         	//space between tiles
-        	var tileWidth = 72 + 6;
+        	var tileWidth = 74 + 6;
         	var tileHeight = 100;
         	
         	//coordinates of the first tile
         	var top = 0;
-            var left = (nbTiles / 4) * 72;
+            var left = (nbTiles / 4) * 74;
             
             var angle = 0;
             
@@ -111,7 +111,7 @@ function (dojo, declare) {
 
         	for(var idx in tiles){
         		
-        		var bgPosition = (idx - 1) * - 72;
+        		var bgPosition = (idx - 1) * - 74;
         		
 	        	//create the html node from the jstpl expression
 	        	dojo.place( this.format_block( 'jstpl_tile', {
