@@ -101,12 +101,14 @@ class LeDernierPeuple extends Table
         $request = getRequestInitPawns($players);
 	   	self::DbQuery( $request );
 		
-		
 		//init the cards
         $request = getRequestInitCards($players);
 	   	self::DbQuery( $request );
 		
-       
+	   	//init the power cards
+	   	$request = getRequestInitPowerCards();
+		self::DbQuery( $request );
+	   
 
         // Activate first player (which is in general a good idea :) )
         $this->activeNextPlayer();
@@ -155,8 +157,19 @@ class LeDernierPeuple extends Table
         $sql = "SELECT cardOrder,moveType,moveShift,teleportTile FROM card where location = '".$current_player_id."' and chosen=0 order by cardOrder";
         $result["cards"] = self::getCollectionFromDb( $sql );
 		
+		//get the power cards of the player
+        $sql = "SELECT id,name FROM powerCard where location = '".$current_player_id."' and chosen=0 order by id";
+        $result["powerCards"] = self::getCollectionFromDb( $sql );
+		
+		//get the number of cards of each players
 		$allPlayerIds = array_keys($result['players']);
-		$sql = "SELECT location, count(*) as nbCard FROM card WHERE location IN (".implode(",", $allPlayerIds).") group by location";
+		$sql = 	"select location, sum(nbCard) as nbCard from ".
+				"( ".
+				"SELECT count(*) as nbCard, location FROM `powerCard` where location IN (".implode(",", $allPlayerIds).") group by location ".
+				"union all ".
+				"SELECT count(*) as nbCard, location FROM `card` where location IN (".implode(",", $allPlayerIds).") group by location) as tab ".
+				"group by location";
+		
 		
 		self::debug( "###QUERY : ".$sql);
 		
@@ -376,6 +389,10 @@ class LeDernierPeuple extends Table
 				}
 			}
 		}
+		//check if we're on a dig tile
+		else if ($tileId % 4 == 0){
+			$this->drawPowerCard($playerId);
+		}
 
 		
 		//udpate the pawn position
@@ -506,7 +523,7 @@ class LeDernierPeuple extends Table
 		if(count($pawns) > 0){
 				
 			//get random cards to determine new pawns position	
-			$newCards = $this->getRandomCardsInDeck(count($pawns));
+			$newCards = $this->getRandomCardsInDeck(count($pawns), "card");
 			
 			$cardIds = array();
 			$teleport = array();
@@ -539,20 +556,20 @@ class LeDernierPeuple extends Table
 	/**
 	 * Get $nbCard cards from the deck
 	 */
-	function getRandomCardsInDeck($nbCard){
+	function getRandomCardsInDeck($nbCard, $table){
 		//we check if we have enough card in the deck
-		$sql = "select count(*) from card where location='DECK'";
+		$sql = "select count(*) from ".$table." where location='DECK'";
 		
 		$nbCardAvailable = self::getUniqueValueFromDB( $sql );
 		
 		//we don't have enough card, we move the cards from the trash to the deck
 		if($nbCardAvailable < $nbCard){
-			$sql = "update card set location='DECK',chosen=0 where location='TRASH'";
+			$sql = "update ".$table." set location='DECK',chosen=0 where location='TRASH'";
 			self::DbQuery( $sql );	
 		}
 		
 		//recheck if we have enough card in the deck after the change
-		$sql = "select count(*) from card where location='DECK'";
+		$sql = "select count(*) from ".$table." where location='DECK'";
 		$nbCardAvailable = self::getUniqueValueFromDB( $sql );
 		
 		if($nbCardAvailable < $nbCard){
@@ -561,7 +578,7 @@ class LeDernierPeuple extends Table
 		}
 		
 		//get $nbCard random cards
-		$sql = "select * from card where location='DECK' order by rand() LIMIT 0,".$nbCard;
+		$sql = "select * from ".$table." where location='DECK' order by rand() LIMIT 0,".$nbCard;
 		
 		$newCards = self::getObjectListFromDB($sql);
 		
@@ -574,7 +591,7 @@ class LeDernierPeuple extends Table
 	 */
 	function drawCard($nbCard, $playerId){
 		
-		$newCards = $this->getRandomCardsInDeck($nbCard);
+		$newCards = $this->getRandomCardsInDeck($nbCard, "card");
 		
 		if(count($newCards) > 0){
 			//build the update request to put the cards in the player's hands
@@ -600,8 +617,59 @@ class LeDernierPeuple extends Table
 			$this->log("No more cards are available", array());
 		}
 		
+		$sql = 	"select sum(nbCard) as nbCard from ".
+				"( ".
+				"SELECT count(*) as nbCard FROM `powerCard` where location = '".$playerId."' ".
+				"union all ".
+				"SELECT count(*) as nbCard FROM `card` where location = '".$playerId."') as tab ";
+				
+		$newNbCards = self::getUniqueValueFromDB($sql);		
 		
-		$sql = "select count(*) from card where location='".$playerId."'";
+		//notify all players the new number of cards own by this player after the round
+		self::notifyAllPlayers( "newNbCards", "", array(
+				"nbCards"=>array($playerId => $newNbCards)
+				));	
+	
+		return $newCards;
+	}
+
+
+	/**
+	 * Draw a power card if there are, and put it in the player's deck 
+	 */
+	function drawPowerCard($playerId){
+		$newCards = $this->getRandomCardsInDeck(1, "powerCard");
+		
+		if(count($newCards) > 0){
+			//build the update request to put the power card in the player's hands
+			$sql = "update powerCard set location='".$playerId."' where id IN (";
+			$cardIds = array();
+			foreach ($newCards as $card) {
+				$cardIds[] = $card["id"];
+			}
+			$sql .= implode( $cardIds, ',' ); 
+			$sql .= ");";
+			
+			self::DbQuery( $sql );	
+			
+			//notify the player he's got new cards 
+			self::notifyPlayer( $playerId, "newCards", clienttranslate('You get 1 new power card'), array(
+					"newPowerCards"=>$newCards,
+					));	
+			
+		}
+		else{
+			//notify the player no more power cards are available
+			$this->log("No more power cards are available", array());
+		}
+		
+		
+		$sql = 	"select sum(nbCard) as nbCard from ".
+				"( ".
+				"SELECT count(*) as nbCard FROM `powerCard` where location = '".$playerId."' ".
+				"union all ".
+				"SELECT count(*) as nbCard FROM `card` where location = '".$playerId."') as tab ";
+				
 		$newNbCards = self::getUniqueValueFromDB($sql);		
 		
 		//notify all players the new number of cards own by this player after the round

@@ -139,6 +139,10 @@
 	margin-bottom: 10px;
 }
 
+.powerCard{
+	background-image: url('img/powerCards/all.jpg') !important;
+}
+
 .card.canChoose{
 	cursor:pointer;
 }

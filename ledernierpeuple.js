@@ -67,6 +67,9 @@ function (dojo, declare) {
             //put the cards
         	this.putCards(gamedatas.cards);	
         	
+        	//put the power cards
+        	this.putPowerCards(gamedatas.powerCards);	
+        	
         	//set the nb cards of each player in the player box
         	this.putNbCards(gamedatas.nbCards);
  
@@ -199,8 +202,6 @@ function (dojo, declare) {
          */
         putCards : function(cards){
         	
-            //var top = 0;
-            
         	for(var idx in cards){
         		
         		var bgPosition = (cards[idx].cardOrder - 1) * -100;
@@ -214,6 +215,25 @@ function (dojo, declare) {
 	            
 	            //dojo.fx.slideTo({node:'card_'+cards[idx].cardOrder,top : top, left : left, unit: 'px', duration:1000, delay:2000}).play();
 	            //left+=120;
+        	}
+        	
+        },
+        
+        /**
+         * Put the power cards of the deck
+         */
+        putPowerCards : function(cards){
+        	
+        	for(var idx in cards){
+        		
+        		var bgPosition = (cards[idx].id - 1) * -100;
+        		
+        		//create the html node from the jstpl expression
+	        	dojo.place( this.format_block( 'jstpl_powerCard', {
+	                id: cards[idx].id,
+	                bgPosition : bgPosition
+	            } ) , 'cards' );
+	            
         	}
         	
         },
@@ -704,7 +724,12 @@ function (dojo, declare) {
         },
         
         notif_newCards: function (notif){
-        	this.putCards(notif.args.newCards);
+        	if(notif.args.newCards){
+        		this.putCards(notif.args.newCards);	
+        	}
+        	if(notif.args.newPowerCards){
+				this.putPowerCards(notif.args.newPowerCards);
+        	}
         },
         
         notif_teleportAfterMove: function(notif){

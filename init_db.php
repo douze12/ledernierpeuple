@@ -157,6 +157,39 @@
 	$sql .= implode( $values, ',' );
 	return $sql;
  }
+
+
+
+/**
+ * Get the SQL requests to insert the power cards
+ */
+function getRequestInitPowerCards(){
+	//array representing all the available power cards
+ 	$cardsDef = array(
+		1 => array("name"=>"bandit", "location" => "DECK"),
+		2 => array("name"=>"luck", "location" => "DECK"),
+		3 => array("name"=>"defense", "location" => "DECK"),
+		4 => array("name"=>"strength", "location" => "DECK"),
+		5 => array("name"=>"blackMagic", "location" => "DECK"),
+		6 => array("name"=>"mace", "location" => "DECK"),
+		7 => array("name"=>"switch", "location" => "DECK"),
+		8 => array("name"=>"heal", "location" => "DECK"),
+		9 => array("name"=>"curse", "location" => "DECK"),
+		10 => array("name"=>"barter", "location" => "DECK"),
+		11 => array("name"=>"speed", "location" => "DECK"),
+		12 => array("name"=>"thief", "location" => "DECK"),
+	);
+	
+	$sql ="INSERT INTO powerCard(name,location) VALUES ";
+	$values = array();
+	foreach ($cardsDef as $card) {
+		$values[] = "('".$card["name"]."','".$card["location"]."')";		
+	}
+    
+	$sql .= implode( $values, ',' );
+	return $sql;
+}
+
  
 
 ?>

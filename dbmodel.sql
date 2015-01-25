@@ -65,6 +65,15 @@ CREATE TABLE IF NOT EXISTS `card` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
+CREATE TABLE IF NOT EXISTS `powerCard` (
+	`id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+	`name` varchar(16) NOT NULL,
+	`location` varchar(16),
+	`chosen` tinyint(1) NOT NULL,
+	PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
 CREATE TABLE IF NOT EXISTS `parameter` (
   `name` varchar(16) NOT NULL,
   `visibility` varchar(16) NOT NULL,
