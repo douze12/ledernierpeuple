@@ -68,7 +68,7 @@ $machinestates = array(
     		"descriptionmyturn" => clienttranslate('${you} must choose a card or <a id="skipLink">Skip</a>'),
     		"type" => "activeplayer",
     		"possibleactions" => array( "chooseCard", "skipTurn" ),
-    		"transitions" => array( "cardChosen" => 4, "skipTurn" => 7)
+    		"transitions" => array( "cardChosen" => 4, "skipTurn" => 12)
     ),
     
     /*3 => array(
@@ -110,31 +110,39 @@ $machinestates = array(
 			"name" => "drawCard",
     		"action" => "stDrawCard",
     		"type" => "game",
-    		"transitions" => array( "cardDrawed" => 7)
+    		"transitions" => array( "cardDrawed" => 8)
 	),
-	
+	/*
 	7 => array(
 			"name" => "checkDoubleMove",
     		"action" => "stCheckDoubleMove",
     		"type" => "game",
     		"transitions" => array( "true" => 4, "false" => 8)
-	),
+	),*/
 	
 	8 => array(
+			"name" => "checkHasPowerCard",
+    		"action" => "stCheckHasPowerCard",
+    		"type" => "game",
+    		"transitions" => array( "true" => 9, "false" => 12)
+	),
+	
+	
+	9 => array(
+			"name" => "choosePowerCard",
+    		"description" => clienttranslate('${actplayer} can choose a Power card'),
+    		"descriptionmyturn" => clienttranslate('${you} can choose a Power card or <a id="skipPowerCardLink">Skip</a>'),
+    		"type" => "activeplayer",
+    		"possibleactions" => array( "choosePowerCard", "skipPowerCard" ),
+    		"transitions" => array( "powerCardChosen" => 12, "skipPowerCard" => 12)
+	),
+	
+	
+	12 => array(
 			"name" => "nextPlayer",
     		"action" => "stNextPlayer",
     		"type" => "game",
     		"transitions" => array( "next" => 2, "victory" => 99)
-	),
-	
-	9 => array(
-			"name" => "usePowerCard",
-    		"description" => clienttranslate('${actplayer} can choose a Power card'),
-    		"descriptionmyturn" => clienttranslate('${you} can choose a Power card'),
-    		"args" => "argTODO",
-    		"type" => "activeplayer",
-    		"possibleactions" => array( "TODO" ),
-    		"transitions" => array( "TODO" => 6)
 	),
 	
 /*

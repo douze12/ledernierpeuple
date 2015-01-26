@@ -337,12 +337,12 @@ function (dojo, declare) {
            		if(args.active_player == this.player_id){
            			dojo.connect(dojo.byId("skipLink"), 'click', this, 'onSkipClick');
            			var me = this;
-           			dojo.query(".card").forEach(
+           			dojo.query(".card.moveCard").forEach(
 				          function(item, index, array){
 				               item.clickListener = dojo.connect(item, 'onclick', me, 'onCardClick');
 				          }
 				     );
-           			dojo.query('.card').addClass("canChoose");
+           			dojo.query('.card.moveCard').addClass("canChoose");
            		}
            		break;
            		
@@ -352,6 +352,20 @@ function (dojo, declare) {
            			this.updateCombination(args.args.pawnsCombination);
            		}
            		
+           		break;
+           		
+           	case 'choosePowerCard':
+           	
+           		if(args.active_player == this.player_id){
+           			dojo.connect(dojo.byId("skipPowerCardLink"), 'click', this, 'onSkipPowerCardClick');
+           			var me = this;
+           			dojo.query(".card.powerCard").forEach(
+				          function(item, index, array){
+				               item.clickListener = dojo.connect(item, 'onclick', me, 'onPowerCardClick');
+				          }
+				     );
+           			dojo.query('.card.powerCard').addClass("canChoose");
+           		}
            		break;
            
             case 'dummmy':
@@ -379,14 +393,14 @@ function (dojo, declare) {
                 break;
            */
           	case 'chooseCard':
-      			dojo.query(".card").forEach(
+      			dojo.query(".card.moveCard").forEach(
 			          function(item, index, array){
 			          	if(item.clickListener){
 			          		dojo.disconnect(item.clickListener);
 			          	}	
 			          }
 			    );
-		     	dojo.query('.card').removeClass("canChoose");
+		     	dojo.query('.card.moveCard').removeClass("canChoose");
           		break;
            
            
@@ -401,6 +415,18 @@ function (dojo, declare) {
 	       			}
 	       		}
            		
+           		break;
+           		
+           	case 'choosePowerCard':
+           	
+           		dojo.query(".card.powerCard").forEach(
+			          function(item, index, array){
+			          	if(item.clickListener){
+			          		dojo.disconnect(item.clickListener);
+			          	}	
+			          }
+			    );
+		     	dojo.query('.card.powerCard').removeClass("canChoose");
            		break;
            
             case 'dummmy':
@@ -612,6 +638,51 @@ function (dojo, declare) {
 	                    pawnId:pawnId
 	                }, this, function( result ) {} );
            	}
+       },
+       
+       /**
+        * Called when the user click the Skip link in order to not use a power card
+        */
+       onSkipPowerCardClick: function(event){
+       		// Stop this event propagation
+			dojo.stopEvent( event );
+
+            // Check that this action is possible at this moment
+            if( this.checkAction( 'skipPowerCard' )) {
+                this.ajaxcall( "/ledernierpeuple/ledernierpeuple/skipPowerCard.html", {}, this, function( result ) {} );
+            }
+       	
+       },
+       
+       /**
+        * Called when the user choose a power card to use
+        */
+       onPowerCardClick: function(event){
+       		// Stop this event propagation
+			dojo.stopEvent( event );
+
+			//get the card id
+            var split = event.currentTarget.id.split('_');
+            var cardId = split[1];
+            
+
+            var playerId = this.player_id;
+            // Check that this action is possible at this moment
+            if( this.checkAction( 'choosePowerCard' )) {            
+                this.ajaxcall( "/ledernierpeuple/ledernierpeuple/choosePowerCard.html", {
+                    playerId:playerId,
+                    cardId:cardId
+                }, this, function( result ) {} );
+            
+            	var me = this;
+	            //remove the card chosen    
+	            dojo.fadeOut({node: event.currentTarget.id,
+	            			onEnd : function(){
+	            				dojo.destroy("powerCard_"+cardId);
+	            			}
+	            	}).play();
+	            
+            }            
        },
         
         /* Example:

@@ -201,7 +201,9 @@ class LeDernierPeuple extends Table
 		$this->gamestate->nextState( 'cardChosen' );
 	}
 	
-	
+	/**
+	 * Skip turn and draw new cards instead of play
+	 */
 	public function skipTurn(){
 		$playerId = self::getActivePlayerId();
 		$playerName = self::getActivePlayerName();
@@ -231,6 +233,45 @@ class LeDernierPeuple extends Table
 		
 		$this->gamestate->nextState( 'skipTurn' );
 	}
+	
+	
+	/**
+	 * The player choose to not use one of his power cards
+	 */
+	public function skipPowerCard(){
+		
+		$this->gamestate->nextState( 'skipPowerCard' );
+	}
+	
+	
+	/**
+	 * THe player has chosen a power card
+	 */
+	public function choosePowerCard($player, $cardId){
+			
+		// Check that this player is active and that this action is possible at this moment
+        self::checkAction( 'choosePowerCard' );  
+		
+		//udpate the card to indicates it was chosen
+		//$sql = "UPDATE card set chosen=1 where cardOrder=".$cardId;
+		
+		//self::DbQuery( $sql );
+		
+		$sql = "select * from powerCard where id=".$cardId;
+		$result = self::getObjectFromDb( $sql );
+		
+		self::debug("Power card chosen : ".$result["name"]);
+		
+		//notify the player
+		/*self::notifyAllPlayers( "playDisc", clienttranslate( '${playerName} has chosen a card' ), array(
+                'playerName' => $playerName
+            ) );*/
+			
+		//the card is chosen, we can move to the next state
+		$this->gamestate->nextState( 'powerCardChosen' );
+	}
+	
+	
 	
 	/**
 	 * Check if the move made by the player is correct
@@ -1013,18 +1054,27 @@ class LeDernierPeuple extends Table
     }
     
     
-    /**
-	 * Method which check if the card played by the active player gives a double move
+	/**
+	 * Check if the player has power cards
 	 */
-    function stCheckDoubleMove(){
-    		
-    	//TODO
-    	//self::debug("#### PARTIAL MOVE from database => ".$this->readParameterAndDestroy("partialMove"));
-    	//self::debug("#### PARTIAL MOVE => ".$this->partialMove);
+	function stCheckHasPowerCard(){
 		
-    	$this->gamestate->nextState( 'false' );
-    }
-    
+		$playerId = self::getActivePlayerId();
+		
+		$sql = "select count(*) from powerCard where location='".$playerId."' and chosen = 0";
+		
+		$nbPowerCards = self::getUniqueValueFromDB( $sql );
+		
+		self::debug("Nb power cards for player ".$playerId." : ".$nbPowerCards);
+		
+		if($nbPowerCards > 0){
+			$this->gamestate->nextState( 'true' );
+		}
+		else{
+			$this->gamestate->nextState( 'false' );
+		}
+	}
+	
     /**
 	 * Method which change the active player after a player finished his move
 	 * Before that, we check if a player rich the total of points for win the game

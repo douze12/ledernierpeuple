@@ -133,14 +133,17 @@
 .card{
 	width : 100px;
 	height: 145px;	
-	background-image: url('img/cards/all.jpg');
 	display: inline-table;
 	margin-left : 10px;
 	margin-bottom: 10px;
 }
 
+.moveCard{
+	background-image: url('img/cards/all.jpg');
+}
+
 .powerCard{
-	background-image: url('img/powerCards/all.jpg') !important;
+	background-image: url('img/powerCards/all.jpg');
 }
 
 .card.canChoose{
@@ -155,7 +158,7 @@
 	position: absolute;
 }
 
-#skipLink{
+#skipLink, #skipPowerCardLink{
 	color:red;
 	cursor:pointer;
 }

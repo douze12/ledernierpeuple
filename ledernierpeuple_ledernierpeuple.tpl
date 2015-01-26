@@ -58,7 +58,7 @@ style="background-image:url(\'img/tiles/tile${id}.png\');"
 
 var jstpl_tile='<div class="tile" id="tile_${id}" style="background-position:${bgPosition}px;"></div>';
 var jstpl_pawn='<div class="pawn pawn_${color}" id="pawn_${id}"></div>';
-var jstpl_card='<div class="card" id="card_${id}" style="background-position:${bgPosition}px;"></div>';
+var jstpl_card='<div class="card moveCard" id="card_${id}" style="background-position:${bgPosition}px;"></div>';
 var jstpl_powerCard='<div class="card powerCard" id="powerCard_${id}" style="background-position:${bgPosition}px;"></div>';
 
 </script>  

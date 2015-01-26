@@ -66,7 +66,7 @@
 	}
 	
 	/**
-	 * Method calls when the player use the card he chose
+	 * Method calls when the player choose to skip his turn
 	 */
 	public function skipTurn(){
 		self::setAjaxMode();
@@ -83,6 +83,29 @@
         $result = $this->game->combinationChosen($pawnId);
         self::ajaxResponse();
 	}
+	
+	
+	/**
+	 * Method calls when the player use the card he chose
+	 */
+	public function skipPowerCard(){
+		self::setAjaxMode();
+        $result = $this->game->skipPowerCard();
+        self::ajaxResponse();
+	}
+	
+	
+		/**
+	 * Method calls when the player choose a card in the deck
+	 */
+	public function choosePowerCard(){
+		self::setAjaxMode();     
+        $cardId = self::getArg( "cardId", AT_posint, true );
+		$playerId = self::getArg( "playerId", AT_posint, true );
+        $result = $this->game->choosePowerCard( $playerId, $cardId );
+        self::ajaxResponse();
+	}
+	
 
     /*
     
