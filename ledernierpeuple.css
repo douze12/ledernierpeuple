@@ -95,35 +95,31 @@
 
 
 .pawn{
-	width : 22px;
-	height: 29px;
+	width : 28px;
+	height: 28px;
 	margin-left : 5px;
 	margin-top:5px;
 	display: inline-table;
 }
 
-.pawn_0065AE{
-	background-image: url('img/pawns/pawn_0065AE.png');
+.pawn_000000{
+	background-image: url('img/pawns/pawn_000000.png');
 }
 
-.pawn_009E48{
-	background-image: url('img/pawns/pawn_009E48.png');
+.pawn_0000FF{
+	background-image: url('img/pawns/pawn_0000FF.png');
 }
 
-.pawn_888888{
-	background-image: url('img/pawns/pawn_888888.png');
+.pawn_719D3E{
+	background-image: url('img/pawns/pawn_719D3E.png');
 }
 
-.pawn_D40000{
-	background-image: url('img/pawns/pawn_D40000.png');
+.pawn_FCC838{
+	background-image: url('img/pawns/pawn_FCC838.png');
 }
 
-.pawn_D40000{
-	background-image: url('img/pawns/pawn_D40000.png');
-}
-
-.pawn_040404{
-	background-image: url('img/pawns/pawn_040404.png');
+.pawn_FF0000{
+	background-image: url('img/pawns/pawn_FF0000.png');
 }
 
 #cards{

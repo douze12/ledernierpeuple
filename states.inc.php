@@ -60,85 +60,108 @@ $machinestates = array(
         "transitions" => array( "" => 2 )
     ),
     
-    // Note: ID=2 => your first state
+	
+	/**
+	 * *****************************************
+	 * 	Step 1 choose a power card
+	 * ***************************************** 
+	 */
+	2 => array(
+			"name" => "checkHasPowerCard",
+    		"action" => "stCheckHasPowerCard",
+    		"type" => "game",
+    		"transitions" => array( "true" => 3, "false" => 10)
+	),
+	
+	
+	3 => array(
+			"name" => "choosePowerCard",
+    		"description" => clienttranslate('${actplayer} can choose a Power card'),
+    		"descriptionmyturn" => clienttranslate('${you} can choose a Power card or <a id="skipPowerCardLink">Skip</a>'),
+    		"type" => "activeplayer",
+    		"possibleactions" => array( "choosePowerCard", "skipPowerCard" ),
+    		"transitions" => array( "powerCardChosen" => 9, "skipPowerCard" => 10, "chooseTargetPlayer" => 4, 
+									"chooseTargetPawns" => 5)
+	),
+	
+	4 => array(
+			"name" => "chooseTargetPlayer",
+    		"description" => clienttranslate('${actplayer} must choose a target'),
+    		"descriptionmyturn" => clienttranslate('${you} must choose a target by clicking a pawn'),
+    		"type" => "activeplayer",
+    		"args" => "argPossibleTarget",
+    		"possibleactions" => array( "chooseTarget" ),
+    		"transitions" => array( "targetChosen" => 9)
+	),
+	
+	9 => array(
+			"name" => "endPowerCard",
+    		"action" => "stEndPowerCard",
+    		"type" => "game",
+    		"transitions" => array("end" => 10)
+	),
+	
+    
+    
+	/**
+	 * *****************************************
+	 * 	Step 2 choose a move card
+	 * ***************************************** 
+	 */
 
-    2 => array(
+    10 => array(
     		"name" => "chooseCard",
     		"description" => clienttranslate('Wait ${actplayer} choose a card'),
     		"descriptionmyturn" => clienttranslate('${you} must choose a card or <a id="skipLink">Skip</a>'),
     		"type" => "activeplayer",
     		"possibleactions" => array( "chooseCard", "skipTurn" ),
-    		"transitions" => array( "cardChosen" => 4, "skipTurn" => 12)
+    		"transitions" => array( "cardChosen" => 11, "skipTurn" => 20)
     ),
     
-    /*3 => array(
-			"name" => "nextPlayer",
-    		"action" => "stNextPlayer",
-    		"type" => "game",
-    		"transitions" => array( "nextPlayer" => 4, "allPlayerDone" => 2, "deckEmpty" => 99)
-	),
-	
-	3 => array(
-			"name" => "skipTurn",
-    		"action" => "stSkipTurn",
-    		"type" => "game",
-    		"transitions" => array( "cardsDrawed" => 7)
-	),*/
-    
-    4 => array(
+    11 => array(
 			"name" => "useCard",
     		"description" => clienttranslate('${actplayer} use his card'),
     		"descriptionmyturn" => clienttranslate('${you} must choose a pawn to move'),
     		"args" => "argPossibleMoves",
     		"type" => "activeplayer",
     		"possibleactions" => array( "useCard" ),
-    		"transitions" => array( "cardUsed" => 6, "chooseCombination"=>5, "doubleMove" => 4)
+    		"transitions" => array( "cardUsed" => 13, "chooseCombination"=>12, "doubleMove" => 11)
 	),
 	
-	5 => array(
+	12 => array(
 			"name" => "chooseCombination",
     		"description" => clienttranslate('${actplayer} must choose a pawn with wich make the attack'),
     		"descriptionmyturn" => clienttranslate('${you} must choose a pawn with wich make the attack'),
     		"args" => "argPossibleCombination",
     		"type" => "activeplayer",
     		"possibleactions" => array( "combinationChosen" ),
-    		"transitions" => array( "combinationChosen" => 6)
+    		"transitions" => array( "combinationChosen" => 13)
 	),
 	
 	
-	6 => array(
+	13 => array(
 			"name" => "drawCard",
     		"action" => "stDrawCard",
     		"type" => "game",
-    		"transitions" => array( "cardDrawed" => 8)
+    		"transitions" => array( "cardDrawed" => 14)
 	),
-	/*
-	7 => array(
-			"name" => "checkDoubleMove",
-    		"action" => "stCheckDoubleMove",
+	
+	
+	14 => array(
+			"name" => "endMoveCard",
+    		"action" => "stEndMoveCard",
     		"type" => "game",
-    		"transitions" => array( "true" => 4, "false" => 8)
-	),*/
-	
-	8 => array(
-			"name" => "checkHasPowerCard",
-    		"action" => "stCheckHasPowerCard",
-    		"type" => "game",
-    		"transitions" => array( "true" => 9, "false" => 12)
+    		"transitions" => array("end" => 20, "speedPowerUsed" => 2)
 	),
+
 	
 	
-	9 => array(
-			"name" => "choosePowerCard",
-    		"description" => clienttranslate('${actplayer} can choose a Power card'),
-    		"descriptionmyturn" => clienttranslate('${you} can choose a Power card or <a id="skipPowerCardLink">Skip</a>'),
-    		"type" => "activeplayer",
-    		"possibleactions" => array( "choosePowerCard", "skipPowerCard" ),
-    		"transitions" => array( "powerCardChosen" => 12, "skipPowerCard" => 12)
-	),
-	
-	
-	12 => array(
+	/**
+	 * *****************************************
+	 * 	Step 3 next player
+	 * ***************************************** 
+	 */	
+	20 => array(
 			"name" => "nextPlayer",
     		"action" => "stNextPlayer",
     		"type" => "game",

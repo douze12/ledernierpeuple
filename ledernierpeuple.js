@@ -204,16 +204,16 @@ function (dojo, declare) {
         	
         	for(var idx in cards){
         		
-        		var bgPosition = (cards[idx].cardOrder - 1) * -100;
+        		var bgPosition = (cards[idx].id - 1) * -100;
         		
         		//create the html node from the jstpl expression
 	        	dojo.place( this.format_block( 'jstpl_card', {
-	                id: cards[idx].cardOrder,
+	                id: cards[idx].id,
 	                bgPosition : bgPosition
 	            } ) , 'cards' );
 	            
 	            
-	            //dojo.fx.slideTo({node:'card_'+cards[idx].cardOrder,top : top, left : left, unit: 'px', duration:1000, delay:2000}).play();
+	            //dojo.fx.slideTo({node:'card_'+cards[idx].id,top : top, left : left, unit: 'px', duration:1000, delay:2000}).play();
 	            //left+=120;
         	}
         	
@@ -236,6 +236,24 @@ function (dojo, declare) {
 	            
         	}
         	
+        },
+        
+        /**
+         * Remove a card from the deck
+         */
+        removeCards: function(cards){
+        	for(var idx in cards){
+        		
+        		var cardEltId = cards[idx].cardType+"_"+cards[idx].id;
+        		
+    		    //remove the card chosen    
+	            dojo.fadeOut({node: cardEltId,
+	            			onEnd : function(){
+	            				dojo.destroy(cardEltId);
+	            			}
+	            	}).play();
+	            
+        	}
         },
 
 		/**
@@ -274,6 +292,16 @@ function (dojo, declare) {
        			var pawnElt = dojo.byId('pawn_'+pawnId);
        			dojo.setStyle(pawnElt, {cursor : 'pointer'});
    				pawnElt.onclickCombinationListener = dojo.connect(pawnElt, 'onclick', this, 'onChooseCombinationClick');
+       		}
+       },
+       
+       
+       updatePawnTarget: function(possiblePawns){
+       		this.possiblePawns = possiblePawns;
+       		for(var pawnId in possiblePawns){
+       			var pawnElt = dojo.byId('pawn_'+pawnId);
+       			dojo.setStyle(pawnElt, {cursor : 'pointer'});
+   				pawnElt.onclickTargetListener = dojo.connect(pawnElt, 'onclick', this, 'onChooseTargetClick');
        		}
        },
        
@@ -367,6 +395,14 @@ function (dojo, declare) {
            			dojo.query('.card.powerCard').addClass("canChoose");
            		}
            		break;
+           		
+           	case 'chooseTargetPlayer':
+           	
+           		if(args.active_player == this.player_id){
+					this.updatePawnTarget(args.args.possiblePawns);	
+           		}
+           	
+           		break;
            
             case 'dummmy':
                 break;
@@ -428,6 +464,19 @@ function (dojo, declare) {
 			    );
 		     	dojo.query('.card.powerCard').removeClass("canChoose");
            		break;
+           		
+       		case 'chooseTargetPlayer':
+       		
+       			//disconnect listeners
+	       		for(var pawnId in this.possiblePawns){
+	       			var pawnElt = dojo.byId('pawn_'+pawnId);
+	       			dojo.setStyle(pawnElt, {cursor : 'auto'});
+	       			if(pawnElt.onclickCombinationListener){
+	       				dojo.disconnect(pawnElt.onclickTargetListener);	
+	       			}
+	       		}
+       		
+       			break;
            
             case 'dummmy':
                 break;
@@ -506,12 +555,10 @@ function (dojo, declare) {
                     cardId:cardId
                 }, this, function( result ) {} );
             
-            	var me = this;
 	            //remove the card chosen    
 	            dojo.fadeOut({node: event.currentTarget.id,
 	            			onEnd : function(){
 	            				dojo.destroy("card_"+cardId);
-	            				//me.hideDeck();
 	            			}
 	            	}).play();
 	            
@@ -684,6 +731,26 @@ function (dojo, declare) {
 	            
             }            
        },
+       
+       /**
+        * Called during the use of a power card when the player choose the targeted pawn
+        */
+       onChooseTargetClick:function(event){
+       		// Stop this event propagation
+			dojo.stopEvent( event );
+			
+			if( this.checkAction( 'chooseTarget' ) )    // Check that this action is possible at this moment
+            {
+
+				//get the pawn id
+	            var split = event.currentTarget.id.split('_');
+	            var pawnId = split[1];
+	            
+	            this.ajaxcall( "/ledernierpeuple/ledernierpeuple/chooseTarget.html", {
+	                    pawnId:pawnId
+	                }, this, function( result ) {} );
+           	}
+       },
         
         /* Example:
         
@@ -746,6 +813,8 @@ function (dojo, declare) {
             
             dojo.subscribe('newCards', this, "notif_newCards");
             
+            dojo.subscribe('loseCards', this, "notif_loseCards");
+            
             dojo.subscribe('teleportAfterMove', this, "notif_teleportAfterMove");
             // Wait 1 sec after executing the teleportAfterMove handler
             //this.notifqueue.setSynchronous( 'teleportAfterMove', 1000 );
@@ -800,6 +869,12 @@ function (dojo, declare) {
         	}
         	if(notif.args.newPowerCards){
 				this.putPowerCards(notif.args.newPowerCards);
+        	}
+        },
+        
+        notif_loseCards: function(notif){
+        	if(notif.args.losedCards){
+        		this.removeCards(notif.args.losedCards);
         	}
         },
         

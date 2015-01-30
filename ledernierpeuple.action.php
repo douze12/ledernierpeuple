@@ -95,7 +95,7 @@
 	}
 	
 	
-		/**
+	/**
 	 * Method calls when the player choose a card in the deck
 	 */
 	public function choosePowerCard(){
@@ -103,6 +103,14 @@
         $cardId = self::getArg( "cardId", AT_posint, true );
 		$playerId = self::getArg( "playerId", AT_posint, true );
         $result = $this->game->choosePowerCard( $playerId, $cardId );
+        self::ajaxResponse();
+	}
+	
+	
+	public function chooseTarget(){
+		self::setAjaxMode();
+		$pawnId = self::getArg( "pawnId", AT_posint, true );
+        $result = $this->game->targetChosen($pawnId);
         self::ajaxResponse();
 	}
 	

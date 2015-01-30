@@ -54,14 +54,14 @@ CREATE TABLE IF NOT EXISTS `pawn` (
 
 
 CREATE TABLE IF NOT EXISTS `card` (
-  `cardOrder` int(10) unsigned NOT NULL,
+  `id` int(10) unsigned NOT NULL,
   `moveType` varchar(16) NOT NULL,
   `moveShift` int(10) NOT NULL,
   `moveShift2` int(10) NOT NULL,
   `teleportTile` int(10) unsigned NOT NULL,
   `location` varchar(16),
   `chosen` tinyint(1) NOT NULL,
-  PRIMARY KEY (`cardOrder`)
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
@@ -75,10 +75,11 @@ CREATE TABLE IF NOT EXISTS `powerCard` (
 
 
 CREATE TABLE IF NOT EXISTS `parameter` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(16) NOT NULL,
-  `visibility` varchar(16) NOT NULL,
+  `visibility` varchar(16),
   `value` varchar(16) NOT NULL,
-  PRIMARY KEY (`name`,`visibility`)
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 

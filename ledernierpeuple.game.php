@@ -65,7 +65,7 @@ class LeDernierPeuple extends Table
         // Set the colors of the players with HTML color code
         // The default below is red/green/blue/orange/brown
         // The number of colors defined here must correspond to the maximum number of players allowed for the gams
-        $default_colors = array( "0065AE", "888888", "D40000", "009E48", "D76000", "040404" );
+        $default_colors = array( "0000FF", "FCC838", "FF0000", "719D3E", "000000" );
 		
  
         // Create players
@@ -154,7 +154,7 @@ class LeDernierPeuple extends Table
         $result['pawns'] = self::getCollectionFromDb( $sql );
 		
 		//get the cards of the player
-        $sql = "SELECT cardOrder,moveType,moveShift,teleportTile FROM card where location = '".$current_player_id."' and chosen=0 order by cardOrder";
+        $sql = "SELECT id,moveType,moveShift,teleportTile FROM card where location = '".$current_player_id."' and chosen=0 order by id";
         $result["cards"] = self::getCollectionFromDb( $sql );
 		
 		//get the power cards of the player
@@ -163,12 +163,12 @@ class LeDernierPeuple extends Table
 		
 		//get the number of cards of each players
 		$allPlayerIds = array_keys($result['players']);
-		$sql = 	"select location, sum(nbCard) as nbCard from ".
-				"( ".
-				"SELECT count(*) as nbCard, location FROM `powerCard` where location IN (".implode(",", $allPlayerIds).") group by location ".
-				"union all ".
-				"SELECT count(*) as nbCard, location FROM `card` where location IN (".implode(",", $allPlayerIds).") group by location) as tab ".
-				"group by location";
+		$sql = "select player_id, sum(nbCard) as nbCard from
+				(
+				select player_id, (select count(*) from powerCard where location=player_id) as nbCard from player
+				union all 
+				select player_id, (select count(*) from card where location=player_id) as nbCard from player) as tab group by player_id";
+				
 		
 		
 		self::debug( "###QUERY : ".$sql);
@@ -188,7 +188,7 @@ class LeDernierPeuple extends Table
         self::checkAction( 'chooseCard' );  
 		
 		//udpate the card to indicates it was chosen
-		$sql = "UPDATE card set chosen=1 where cardOrder=".$cardId;
+		$sql = "UPDATE card set chosen=1 where id=".$cardId;
 		
 		self::DbQuery( $sql );
 		
@@ -240,32 +240,91 @@ class LeDernierPeuple extends Table
 	 */
 	public function skipPowerCard(){
 		
+		// Check that this player is active and that this action is possible at this moment
+        self::checkAction( 'skipPowerCard' );  
+		
 		$this->gamestate->nextState( 'skipPowerCard' );
 	}
 	
 	
 	/**
-	 * THe player has chosen a power card
+	 * The player has chosen a power card
 	 */
-	public function choosePowerCard($player, $cardId){
+	public function choosePowerCard($playerId, $cardId){
 			
 		// Check that this player is active and that this action is possible at this moment
         self::checkAction( 'choosePowerCard' );  
 		
 		//udpate the card to indicates it was chosen
-		//$sql = "UPDATE card set chosen=1 where cardOrder=".$cardId;
-		
-		//self::DbQuery( $sql );
+		$sql = "UPDATE powerCard set chosen=1 where id=".$cardId;
+		self::DbQuery( $sql );
 		
 		$sql = "select * from powerCard where id=".$cardId;
-		$result = self::getObjectFromDb( $sql );
+		$powerCard = self::getObjectFromDb( $sql );
 		
-		self::debug("Power card chosen : ".$result["name"]);
+		$playerName = self::getActivePlayerName();
 		
 		//notify the player
-		/*self::notifyAllPlayers( "playDisc", clienttranslate( '${playerName} has chosen a card' ), array(
-                'playerName' => $playerName
-            ) );*/
+		$this->log('${playerName} use the power card <b>${cardName}</b>', 
+					array("playerName"=>$playerName, "cardName" => $powerCard["name"]));
+					
+		
+		switch($powerCard["name"]){
+			
+			case "bandit":
+			case "blackMagic":
+			case "mace":
+			case "curse":
+			case "barter":
+			case "thief":
+				//for those power cards, we need to choose the targeted player
+				$this->gamestate->nextState( 'chooseTargetPlayer' );
+				return;
+				
+			case "switch":
+				//switch => the current player has to choose 2 pawns to switch
+				$this->gamestate->nextState( 'chooseTargetPawns' );
+				return;
+			
+			case "luck":
+				//luck => the current player draw 1 power card and 1 move card
+				$this->drawCard(1, $playerId);
+				$this->drawPowerCard($playerId);
+				break;
+				
+			case "defense":
+				$this->createPublicParameter("DEFENSE_POWER", $playerId);
+				break;
+				
+			case "strength":
+			case "heal":
+				//strength => the current player earns 2 points
+				//heal => the current player earns 1 points
+				if($powerCard["name"] == "strength"){
+					$nbPoints = 2;
+				}
+				else{
+					$nbPoints = 1;
+				}
+
+				$sql="update player set player_score=player_score+".$nbPoints." where player_id=".$playerId;
+				self::DbQuery( $sql );
+				
+				//log
+				$this->log('Player ${playerName} earns ${nbPoints} point(s)', 
+							array("playerName" => $playerName, "nbPoints" => $nbPoints));	
+							
+				$newScores = self::getCollectionFromDb( "SELECT player_id, player_score FROM player where player_id=".$playerId, true );
+		        self::notifyPlayer( $playerId, "newScores", "", array(
+		            "scores" => $newScores
+		        ) );
+				
+				break;
+				
+			case "speed":
+				$this->createPrivateParameter("SPEED_POWER", "TRUE");
+				break;
+		}
 			
 		//the card is chosen, we can move to the next state
 		$this->gamestate->nextState( 'powerCardChosen' );
@@ -326,6 +385,13 @@ class LeDernierPeuple extends Table
 		$result = self::getObjectFromDb( $sql );
 		$nbTiles = $result["nbTiles"];
 		
+		
+		//get the id of the player's pawn
+		$sql = "select player_name,player_id from pawn p, player pl where p.playerId=pl.player_id and p.id=".$pawnId;
+		$result3 = self::getObjectFromDb($sql);
+		$pawnPlayerId = $result3["player_id"];
+		$pawnPlayerName = $result3["player_name"]; 
+		
 		//variable to save the pawns we have to teleport at the end of the action
 		$teleportPawns = array();
 		
@@ -353,11 +419,6 @@ class LeDernierPeuple extends Table
 				$attackedTile = $this->mod(($tileId + 1), $nbTiles);
 			}
 			
-			//get the id of the player's pawn
-			$sql = "select player_name,player_id from pawn p, player pl where p.playerId=pl.player_id and p.id=".$pawnId;
-			$result3 = self::getObjectFromDb($sql);
-			$pawnPlayerId = $result3["player_id"];
-			$pawnPlayerName = $result3["player_name"]; 
 			
 			//get the name and id of the player who might be attacked
 			$sql = "select player_name,player_id from player p, tile t where t.speciesPlayerId=p.player_id and t.id=".$attackedTile;
@@ -430,8 +491,8 @@ class LeDernierPeuple extends Table
 				}
 			}
 		}
-		//check if we're on a dig tile
-		else if ($tileId % 4 == 0){
+		//check if we're on a dig tile and the player move one of his own pawn
+		else if ($tileId % 4 == 0 && $pawnPlayerId == $playerId){
 			$this->drawPowerCard($playerId);
 		}
 
@@ -445,10 +506,10 @@ class LeDernierPeuple extends Table
 			$this->teleportAfterAttack($teleportPawns);
 		}
 		//update the card status to put it in the trash
-		if(!$partial || $attackFlag || $chooseCombinationFlag){
+		/*if(!$partial || $attackFlag || $chooseCombinationFlag){
 			$sql = "UPDATE card set location='TRASH' where chosen=1 and location=".$playerId;
 			self::DbQuery( $sql );
-		}
+		}*/
 		
 		
 		//determine the next state
@@ -498,6 +559,15 @@ class LeDernierPeuple extends Table
 		self::debug( "PlayerAttacked : ".implode(",",$playerAttacked) );
 		self::debug( "PlayerHelper : ".implode(",",$playerHelper) );
 		
+		//check if the player attacked has the defense power card activated
+		$defensePlayer = $this->readParameter("DEFENSE_POWER");
+		$defense = FALSE;
+		if($defensePlayer && $defensePlayer == $playerAttacked["id"]){
+			$this->destroyParameter("DEFENSE_POWER");
+			$defense = TRUE;
+		}
+		
+		
 		//compute the points earns/loses
 		$points = array();
 		//points earns
@@ -513,11 +583,13 @@ class LeDernierPeuple extends Table
 			$points[$pawnPlayer["id"]] = 2;
 		}
 		//points loses
-		if(array_key_exists($playerAttacked["id"], $points)){
-			$points[$playerAttacked["id"]] = $points[$playerAttacked["id"]] - 1; 
-		}
-		else{
-			$points[$playerAttacked["id"]] = -1;
+		if(!$defense){
+			if(array_key_exists($playerAttacked["id"], $points)){
+				$points[$playerAttacked["id"]] = $points[$playerAttacked["id"]] - 1; 
+			}
+			else{
+				$points[$playerAttacked["id"]] = -1;
+			}
 		}
 		
 		self::debug( "Points : ".implode(",",$points) );
@@ -550,6 +622,12 @@ class LeDernierPeuple extends Table
 		        ) );
 			}
 		}
+
+		//notify everybody than the player attacked had the power card defense
+		if($defense){
+			$this->log('Player ${playerName} is protected by the power card defense', 
+							array("playerName" => $playerAttacked["name"]));
+		}
 		
         
 		
@@ -577,14 +655,14 @@ class LeDernierPeuple extends Table
 				self::DbQuery( $sql );
 				
 				$teleport[] = array("pawnId"=>$pawn["id"], "tileId" => $card["teleportTile"]);
-				$cardIds[] = $card["cardOrder"];
+				$cardIds[] = $card["id"];
 				
 				$this->log('The pawn ${pawnId} is teleported on tile ${tileId}', 
 							array('pawnId' => $pawn["id"], "tileId" => $card["teleportTile"]));
 			}
 			
 			//put the cards in the trash
-			$sql = "update card set location='TRASH' where cardOrder IN (".implode( $cardIds, ',' ).")";
+			$sql = "update card set location='TRASH' where id IN (".implode( $cardIds, ',' ).")";
 			self::DbQuery( $sql );
 			
 		 	self::notifyAllPlayers( "teleportAfterMove","",
@@ -636,10 +714,10 @@ class LeDernierPeuple extends Table
 		
 		if(count($newCards) > 0){
 			//build the update request to put the cards in the player's hands
-			$sql = "update card set location='".$playerId."' where cardOrder IN (";
+			$sql = "update card set location='".$playerId."' where id IN (";
 			$cardIds = array();
 			foreach ($newCards as $card) {
-				$cardIds[] = $card["cardOrder"];
+				$cardIds[] = $card["id"];
 			}
 			$sql .= implode( $cardIds, ',' ); 
 			$sql .= ");";
@@ -658,18 +736,9 @@ class LeDernierPeuple extends Table
 			$this->log("No more cards are available", array());
 		}
 		
-		$sql = 	"select sum(nbCard) as nbCard from ".
-				"( ".
-				"SELECT count(*) as nbCard FROM `powerCard` where location = '".$playerId."' ".
-				"union all ".
-				"SELECT count(*) as nbCard FROM `card` where location = '".$playerId."') as tab ";
-				
-		$newNbCards = self::getUniqueValueFromDB($sql);		
 		
-		//notify all players the new number of cards own by this player after the round
-		self::notifyAllPlayers( "newNbCards", "", array(
-				"nbCards"=>array($playerId => $newNbCards)
-				));	
+		$this->notifyNewNbOfCards($playerId);
+		
 	
 		return $newCards;
 	}
@@ -704,7 +773,17 @@ class LeDernierPeuple extends Table
 			$this->log("No more power cards are available", array());
 		}
 		
+		$this->notifyNewNbOfCards($playerId);
 		
+		return $newCards;
+	}
+
+	
+	/**
+	 * Notifiy the players the new number of cards of a player
+	 */
+	function notifyNewNbOfCards($playerId){
+			
 		$sql = 	"select sum(nbCard) as nbCard from ".
 				"( ".
 				"SELECT count(*) as nbCard FROM `powerCard` where location = '".$playerId."' ".
@@ -716,9 +795,7 @@ class LeDernierPeuple extends Table
 		//notify all players the new number of cards own by this player after the round
 		self::notifyAllPlayers( "newNbCards", "", array(
 				"nbCards"=>array($playerId => $newNbCards)
-				));	
-	
-		return $newCards;
+				));
 	}
 	
 	
@@ -790,11 +867,7 @@ class LeDernierPeuple extends Table
 					  
 		//teleport the pawns after the attack
 		$this->teleportAfterAttack(array($pawnId, $basePawnId));
-		
-		
-		//update the card status to put it in the trash
-		$sql = "UPDATE card set location='TRASH' where chosen=1 and location=".$playerId;
-		self::DbQuery( $sql );
+	
 		
 		//destroy the parameters 
 		$this->destroyParameter("otherTileId");
@@ -803,6 +876,149 @@ class LeDernierPeuple extends Table
 		
 		// Finally, go to the next state
         $this->gamestate->nextState( "combinationChosen" );
+	}
+
+	
+	/**
+	 * Get a random card in a player's deck.
+	 * Return NULL if no card in the deck
+	 */
+	function getRandomCardInDeckOf($playerId){
+		$sql =	"SELECT id,'card' as cardType from card where location=".$playerId.
+						" union all".
+						" select id,'powerCard' as cardType from powerCard where location=".$playerId;
+				
+		$targetedCards = self::getCollectionFromDB( $sql );
+		
+		if(count($targetedCards) == 0){
+			return NULL;
+		}
+		
+		shuffle($targetedCards);
+		
+		return $targetedCards[0];
+	}
+
+
+	/**
+	 * Function use to apply the effects of the power card bandit
+	 */
+	function playPowerCardBandit($targetedPlayer, $playerId, $playerName){
+		
+		$chosenCard = $this->getRandomCardInDeckOf($targetedPlayer["player_id"]);
+		
+		if($chosenCard == NULL){
+			$this->log('${playerName} try to steal a card from ${targetedPlayer} but he\'s got no card', 
+					array("playerName" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
+			return;
+		}
+		
+		//get the first card and place it in the current player's deck
+		$sql="update ".$chosenCard["cardType"]." set location=".$playerId." where id=".$chosenCard["id"];
+		self::DbQuery( $sql );	
+		
+		//notify the player he loses a card 
+		self::notifyPlayer( $targetedPlayer["player_id"], "loseCards", "", array(
+			"losedCards"=> array($chosenCard),
+			));	
+			
+		//notify the player the new card
+		self::notifyPlayer( $playerId, "newCards", "", array(
+			"newCards"=> array($chosenCard),
+			));
+			
+		//log the action
+		$this->log('${playerName} steal a card from ${targetedPlayer}', 
+					array("playerName" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
+		
+		//notify the new number of cards of the two concerned players
+		$this->notifyNewNbOfCards($playerId);
+		$this->notifyNewNbOfCards($targetedPlayer["player_id"]);
+	}
+
+	/**
+	 * Function use to apply the effects of the power black magic
+	 */
+	function playPowerCardBlackMagic($targetedPlayer, $playerId, $playerName){
+		$chosenCard = $this->getRandomCardInDeckOf($targetedPlayer["player_id"]);
+		
+		if($chosenCard == NULL){
+			$this->log('${playerName} try to destroy a card from ${targetedPlayer} but he\'s got no card', 
+					array("playerName" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
+			return;
+		}
+		
+		//get the first card and place it in the current player's deck
+		$sql="update ".$chosenCard["cardType"]." set location='TRASH' where id=".$chosenCard["id"];
+		self::DbQuery( $sql );	
+		
+		//notify the player he loses a card 
+		self::notifyPlayer( $targetedPlayer["player_id"], "loseCards", "", array(
+			"losedCards"=> array($chosenCard),
+			));	
+			
+		//log the action
+		$this->log('${playerName} destroy a card from ${targetedPlayer}', 
+					array("playerName" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
+		
+		//notify the new number of cards of the targeted player
+		$this->notifyNewNbOfCards($targetedPlayer["player_id"]);
+	} 
+
+
+	function targetChosen($pawnId){
+		$playerId = self::getActivePlayerId();
+		$playerName = self::getActivePlayerName();
+		
+		//get the targeted player id and name
+		$sql="select player_id,player_name from pawn inner join player on (pawn.playerId=player.player_id) where id=".$pawnId;
+		$targetedPlayer = self::getObjectFromDb( $sql );
+		
+		self::debug("Ce putain de name : ".$targetedPlayer["player_name"]);
+		self::debug("Implode : ".implode(",", $targetedPlayer));
+		
+		//get the power card 
+		$sql="select * from powerCard where location=".$playerId." and chosen=1";
+		$powerCard = self::getObjectFromDb( $sql );
+		
+		
+		switch($powerCard["name"]){
+			
+			case "bandit":
+				//bandit => steal a card of the player
+				$this->playPowerCardBandit($targetedPlayer, $playerId, $playerName);
+				
+				break;
+			case "blackMagic":
+				//blackMagic => put one player's card in the trash
+				$this->playPowerCardBlackMagic($targetedPlayer, $playerId, $playerName);
+				
+				break;
+			case "mace":
+				//mace => the targeted player pass the next turn
+				
+				break;
+			case "curse":
+				//curse => the targeted player loses one point 
+				
+				break;
+			case "barter":
+				//barter => swap the cards with the targeted player
+				
+				break;
+			case "thief":
+				//thief => steal one point of the targeted player
+				
+				break;
+				
+			default:
+				throw new BgaUserException( self::_("Action not available") ); 
+				
+		}
+
+		
+		// Finally, go to the next state
+        $this->gamestate->nextState( "targetChosen" );
 	}
 
 
@@ -942,7 +1158,7 @@ class LeDernierPeuple extends Table
 			
 			return array(
 						"possibleMoves" => $possibleMoves,
-						"cardId" => $card["cardOrder"],
+						"cardId" => $card["id"],
 						"playerId" => $playerId
 					);
 		}
@@ -987,7 +1203,7 @@ class LeDernierPeuple extends Table
 		
 		return array(
 			"possibleMoves" => $possibleMoves,
-			"cardId" => $card["cardOrder"],
+			"cardId" => $card["id"],
 			"playerId" => $playerId
 		);
     }
@@ -1013,6 +1229,23 @@ class LeDernierPeuple extends Table
 			"pawnsCombination" => $pawnsCombination
 		);
 	}
+	
+	
+	/**
+	 * Get the arguments for the choice of the target player affected by the power card
+	 */
+	function argPossibleTarget(){
+		$playerId = self::getActivePlayerId();
+		
+		$sql = "select * from pawn where playerId!=".$playerId;
+		
+		$pawns = self::getCollectionFromDB( $sql );
+		
+		return array(
+			"possiblePawns" => $pawns
+		);
+		
+	}
 
     
 //////////////////////////////////////////////////////////////////////////////
@@ -1037,22 +1270,6 @@ class LeDernierPeuple extends Table
     }    
     */
     
-    /**
-	 * Draw a new card for the active player
-	 */
-    function stDrawCard(){
-    		
-		$playerId = self::getActivePlayerId();
-		
-		$this->drawCard(1, $playerId);
-		
-		//destroy all the parameters
-		$this->destroyParameter("doubleMove");
-		$this->destroyParameter("doubleMovePawnId");
-    	
-    	$this->gamestate->nextState( 'cardDrawed' );
-    }
-    
     
 	/**
 	 * Check if the player has power cards
@@ -1074,6 +1291,67 @@ class LeDernierPeuple extends Table
 			$this->gamestate->nextState( 'false' );
 		}
 	}
+	
+	/**
+	 * Method called when the player finished to use his power card
+	 */
+	function stEndPowerCard(){
+			
+		$playerId = self::getActivePlayerId();
+		
+		//put the power card in the trash
+		$sql = "UPDATE powerCard set location='TRASH',chosen=0 where location='".$playerId."' and chosen=1";
+		self::DbQuery( $sql );
+		
+		//notify the change of nb of cards
+		$this->notifyNewNbOfCards($playerId);
+		
+		$this->gamestate->nextState( 'end' );
+		
+	}
+	
+    
+    /**
+	 * Draw a new card for the active player
+	 */
+    function stDrawCard(){
+    		
+		$playerId = self::getActivePlayerId();
+		
+		$this->drawCard(1, $playerId);
+		
+		//destroy all the parameters
+		$this->destroyParameter("doubleMove");
+		$this->destroyParameter("doubleMovePawnId");
+    	
+    	$this->gamestate->nextState( 'cardDrawed' );
+    }
+	
+	
+	/**
+	 * Method called when the player finished to move his pawn
+	 */
+	function stEndMoveCard(){
+		
+		$playerId = self::getActivePlayerId();
+		
+		//update the card status to put it in the trash
+		$sql = "UPDATE card set location='TRASH',chosen=0 where chosen=1 and location=".$playerId;
+		self::DbQuery( $sql );
+		
+		$this->notifyNewNbOfCards($playerId);
+		
+		$speedPower = $this->readParameterAndDestroy("SPEED_POWER");
+		if($speedPower && $speedPower == "TRUE"){
+			$this->gamestate->nextState( 'speedPowerUsed' );	
+		}
+		else{
+			$this->gamestate->nextState( 'end' );
+		}
+		
+	}
+    
+    
 	
     /**
 	 * Method which change the active player after a player finished his move
@@ -1146,12 +1424,12 @@ class LeDernierPeuple extends Table
 	
 	function createPrivateParameter($name, $value){
 		$playerId = self::getCurrentPlayerId();
-		$sql = "insert into parameter values ('".$name."','".$playerId."','".$value."')";
+		$sql = "insert into parameter(name,visibility,value) values ('".$name."','".$playerId."','".$value."')";
 		self::DbQuery( $sql );
 	}
 	
 	function createPublicParameter($name, $value){
-		$sql = "insert into parameter values ('".$name."',NULL,'".$value."')";
+		$sql = "insert into parameter(name,visibility,value) values ('".$name."',NULL,'".$value."')";
 		self::DbQuery( $sql );
 	}
 	
