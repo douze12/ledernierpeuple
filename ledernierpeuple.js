@@ -67,9 +67,6 @@ function (dojo, declare) {
             //put the cards
         	this.putCards(gamedatas.cards);	
         	
-        	//put the power cards
-        	this.putPowerCards(gamedatas.powerCards);	
-        	
         	//set the nb cards of each player in the player box
         	this.putNbCards(gamedatas.nbCards);
  
@@ -207,7 +204,7 @@ function (dojo, declare) {
         		var bgPosition = (cards[idx].id - 1) * -100;
         		
         		//create the html node from the jstpl expression
-	        	dojo.place( this.format_block( 'jstpl_card', {
+	        	dojo.place( this.format_block( 'jstpl_'+cards[idx].cardType, {
 	                id: cards[idx].id,
 	                bgPosition : bgPosition
 	            } ) , 'cards' );
@@ -219,24 +216,6 @@ function (dojo, declare) {
         	
         },
         
-        /**
-         * Put the power cards of the deck
-         */
-        putPowerCards : function(cards){
-        	
-        	for(var idx in cards){
-        		
-        		var bgPosition = (cards[idx].id - 1) * -100;
-        		
-        		//create the html node from the jstpl expression
-	        	dojo.place( this.format_block( 'jstpl_powerCard', {
-	                id: cards[idx].id,
-	                bgPosition : bgPosition
-	            } ) , 'cards' );
-	            
-        	}
-        	
-        },
         
         /**
          * Remove a card from the deck
@@ -246,13 +225,12 @@ function (dojo, declare) {
         		
         		var cardEltId = cards[idx].cardType+"_"+cards[idx].id;
         		
-    		    //remove the card chosen    
-	            dojo.fadeOut({node: cardEltId,
-	            			onEnd : function(){
-	            				dojo.destroy(cardEltId);
-	            			}
-	            	}).play();
-	            
+        		if($(cardEltId) != null){
+	    		    //remove the card chosen    
+		            dojo.fadeOut({node: cardEltId,
+		            			onEnd : dojo.destroy
+		            	}).play();	
+        		}
         	}
         },
 
@@ -304,6 +282,19 @@ function (dojo, declare) {
    				pawnElt.onclickTargetListener = dojo.connect(pawnElt, 'onclick', this, 'onChooseTargetClick');
        		}
        },
+       
+       
+       updateSwitchedPawnsTarget: function(){
+			
+			var me = this;
+	
+			dojo.query(".pawn").forEach(function(item, index, array) {
+				dojo.setStyle(item, {cursor : 'pointer'});
+				item.clickListener = dojo.connect(item, 'onclick', me, 'onChoosePawnToSwitchClick');
+			});
+	
+		},
+       
        
        showChosenCard : function(cardId){
        		var bgPosition = (cardId - 1) * -100;
@@ -403,6 +394,14 @@ function (dojo, declare) {
            		}
            	
            		break;
+           		
+           	case 'chooseSwitchedPawns':
+           	
+           		if(args.active_player == this.player_id){
+           			this.updateSwitchedPawnsTarget();
+           		}
+           	
+           		break;
            
             case 'dummmy':
                 break;
@@ -477,6 +476,19 @@ function (dojo, declare) {
 	       		}
        		
        			break;
+           
+           case 'chooseSwitchedPawns':
+           		
+           		dojo.query(".pawn").forEach(function(item,index,array){
+	       			dojo.setStyle(item, {cursor : 'auto'});
+	       			if(item.clickListener){
+		          		dojo.disconnect(item.clickListener);
+		          	}
+           		});
+           		dojo.query('.pawn.selectedPawn').removeClass("selectedPawn");
+           		
+           		break;
+           
            
             case 'dummmy':
                 break;
@@ -625,8 +637,6 @@ function (dojo, declare) {
 	            var split = event.currentTarget.id.split('_');
 	            var tileId = split[1];
 	            
-	            //move the pawn on the selected tile
-	            this.movePawn(this.selectedPawnId, tileId);
 	            var partial = false;
 	            //check if it's a partial move
 	            for(var idx in this.possibleMoves[this.selectedPawnId]){
@@ -751,6 +761,45 @@ function (dojo, declare) {
 	                }, this, function( result ) {} );
            	}
        },
+       
+       /**
+        * Called when the player click on a pawn he want to switch with another
+        */
+       onChoosePawnToSwitchClick: function(event){
+       		// Stop this event propagation
+			dojo.stopEvent( event );
+			
+			var clickedPawnId = event.currentTarget.id;
+			
+			if(clickedPawnId == this.firstPawnId){
+				dojo.query("#"+clickedPawnId).removeClass("selectedPawn");
+				this.firstPawnId = null;
+				return;
+			}
+			
+			//first pawn the player click on
+			if(this.firstPawnId == null){
+				this.firstPawnId = clickedPawnId;
+				dojo.query("#"+clickedPawnId).addClass("selectedPawn");
+				return;
+			}
+			else{
+				if( this.checkAction( 'chooseSwitchedPawns' ) )    // Check that this action is possible at this moment
+	            {
+	            	//get the first pawn id
+	            	var firstPawnId = this.firstPawnId.split("_")[1];
+	
+					//get the second pawn id
+		            var secondPawnId = event.currentTarget.id.split('_')[1];
+		            
+		            this.ajaxcall( "/ledernierpeuple/ledernierpeuple/chooseSwitchedPawns.html", {
+		                    firstPawnId:firstPawnId,
+		                    secondPawnId:secondPawnId
+		                }, this, function( result ) {} );
+	           	}
+			}
+			
+       },
         
         /* Example:
         
@@ -838,11 +887,7 @@ function (dojo, declare) {
         notif_movePawn : function(notif){
         	console.log(notif);
         	
-        	var playerId = this.player_id;
-        	//if the player who made the move is the actual player, we don't move
-        	if(playerId != notif.args.playerId){
-        		this.movePawn(notif.args.pawnId, notif.args.tileId);
-        	}
+    		this.movePawn(notif.args.pawnId, notif.args.tileId);
         },
         
         notif_newScores: function( notif )
@@ -866,9 +911,6 @@ function (dojo, declare) {
         notif_newCards: function (notif){
         	if(notif.args.newCards){
         		this.putCards(notif.args.newCards);	
-        	}
-        	if(notif.args.newPowerCards){
-				this.putPowerCards(notif.args.newPowerCards);
         	}
         },
         

@@ -154,12 +154,7 @@ class LeDernierPeuple extends Table
         $result['pawns'] = self::getCollectionFromDb( $sql );
 		
 		//get the cards of the player
-        $sql = "SELECT id,moveType,moveShift,teleportTile FROM card where location = '".$current_player_id."' and chosen=0 order by id";
-        $result["cards"] = self::getCollectionFromDb( $sql );
-		
-		//get the power cards of the player
-        $sql = "SELECT id,name FROM powerCard where location = '".$current_player_id."' and chosen=0 order by id";
-        $result["powerCards"] = self::getCollectionFromDb( $sql );
+        $result["cards"] = $this->getAllCardsOf($current_player_id);
 		
 		//get the number of cards of each players
 		$allPlayerIds = array_keys($result['players']);
@@ -283,7 +278,7 @@ class LeDernierPeuple extends Table
 				
 			case "switch":
 				//switch => the current player has to choose 2 pawns to switch
-				$this->gamestate->nextState( 'chooseTargetPawns' );
+				$this->gamestate->nextState( 'chooseSwitchedPawns' );
 				return;
 			
 			case "luck":
@@ -505,11 +500,6 @@ class LeDernierPeuple extends Table
 		if(count($teleportPawns) > 0){
 			$this->teleportAfterAttack($teleportPawns);
 		}
-		//update the card status to put it in the trash
-		/*if(!$partial || $attackFlag || $chooseCombinationFlag){
-			$sql = "UPDATE card set location='TRASH' where chosen=1 and location=".$playerId;
-			self::DbQuery( $sql );
-		}*/
 		
 		
 		//determine the next state
@@ -697,7 +687,7 @@ class LeDernierPeuple extends Table
 		}
 		
 		//get $nbCard random cards
-		$sql = "select * from ".$table." where location='DECK' order by rand() LIMIT 0,".$nbCard;
+		$sql = "select *, '".$table."' as cardType from ".$table." where location='DECK' order by rand() LIMIT 0,".$nbCard;
 		
 		$newCards = self::getObjectListFromDB($sql);
 		
@@ -764,7 +754,7 @@ class LeDernierPeuple extends Table
 			
 			//notify the player he's got new cards 
 			self::notifyPlayer( $playerId, "newCards", clienttranslate('You get 1 new power card'), array(
-					"newPowerCards"=>$newCards,
+					"newCards"=>$newCards,
 					));	
 			
 		}
@@ -878,17 +868,28 @@ class LeDernierPeuple extends Table
         $this->gamestate->nextState( "combinationChosen" );
 	}
 
+
+	/**
+	 * Get all the cards in a player's deck
+	 */
+	function getAllCardsOf($playerId){
+		$sql =	"SELECT id,'card' as cardType from card where chosen=0 and location=".$playerId.
+						" union all".
+						" select id,'powerCard' as cardType from powerCard where chosen=0 and location=".$playerId;
+				
+		$targetedCards = self::getCollectionFromDB( $sql );
+		
+		return $targetedCards;
+	}
+
 	
 	/**
 	 * Get a random card in a player's deck.
 	 * Return NULL if no card in the deck
 	 */
 	function getRandomCardInDeckOf($playerId){
-		$sql =	"SELECT id,'card' as cardType from card where location=".$playerId.
-						" union all".
-						" select id,'powerCard' as cardType from powerCard where location=".$playerId;
-				
-		$targetedCards = self::getCollectionFromDB( $sql );
+		
+		$targetedCards = $this->getAllCardsOf($playerId);
 		
 		if(count($targetedCards) == 0){
 			return NULL;
@@ -937,7 +938,7 @@ class LeDernierPeuple extends Table
 	}
 
 	/**
-	 * Function use to apply the effects of the power black magic
+	 * Function use to apply the effects of the power card black magic
 	 */
 	function playPowerCardBlackMagic($targetedPlayer, $playerId, $playerName){
 		$chosenCard = $this->getRandomCardInDeckOf($targetedPlayer["player_id"]);
@@ -966,6 +967,172 @@ class LeDernierPeuple extends Table
 	} 
 
 
+	/**
+	 * Function use to apply the effects of the power card mace
+	 */
+	function playPowerCardMace($targetedPlayer){
+		$this->createPublicParameter("MACE_POWER", $targetedPlayer["player_id"]);
+	}
+	
+	
+	/**
+	 * Function use to apply the effects of the power card curse
+	 */
+	function playPowerCardCurse($targetedPlayer, $playerId, $playerName){
+		
+		//check the current points of the targeted player
+		$sql = "select player_score from player where player_id=".$targetedPlayer["player_id"];
+		$currentPoints = self::getUniqueValueFromDB($sql);
+
+		if($currentPoints <= 0){
+			$this->log('${playerName} try to remove a point from ${targetedPlayer} but he\'s got no point', 
+					array("playerName" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
+			return;
+		}
+		
+		$sql= "update player set player_score=player_score-1 where player_id=".$targetedPlayer["player_id"];
+		self::DbQuery( $sql );
+		
+		//notify the new scores
+		$newScores = self::getCollectionFromDb( "SELECT player_id, player_score FROM player where player_id=".$targetedPlayer["player_id"], true );
+        self::notifyPlayer( $targetedPlayer["player_id"], "newScores", "", array(
+            "scores" => $newScores
+        ) );
+		
+		$this->log('${playerName} remove a point from ${targetedPlayer}', 
+					array("playerName" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
+	}
+
+
+	/**
+	 * Function use to apply the effects of the power card thief
+	 */
+	function playPowerCardThief($targetedPlayer, $playerId, $playerName){
+		
+		//check the current points of the targeted player
+		$sql = "select player_score from player where player_id=".$targetedPlayer["player_id"];
+		$currentPoints = self::getUniqueValueFromDB($sql);
+
+		if($currentPoints <= 0){
+			$this->log('${playerName} try to steal a point from ${targetedPlayer} but he\'s got no point', 
+					array("playerName" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
+			return;
+		}
+		
+		$sql= "update player set player_score=player_score-1 where player_id=".$targetedPlayer["player_id"];
+		self::DbQuery( $sql );
+		$sql= "update player set player_score=player_score+1 where player_id=".$playerId;
+		self::DbQuery( $sql );
+		
+		//notify the new scores
+		$newScores = self::getCollectionFromDb( "SELECT player_id, player_score FROM player where player_id=".$targetedPlayer["player_id"], true );
+        self::notifyPlayer( $targetedPlayer["player_id"], "newScores", "", array(
+            "scores" => $newScores
+        ) );
+		$newScores = self::getCollectionFromDb( "SELECT player_id, player_score FROM player where player_id=".$playerId, true );
+        self::notifyPlayer( $playerId, "newScores", "", array(
+            "scores" => $newScores
+        ) );
+		
+		$this->log('${playerName} steal a point from ${targetedPlayer}', 
+					array("playerName" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
+	}
+
+
+
+	/**
+	 * Function use to apply the effects of the power card barter
+	 */
+	function playPowerCardBarter($targetedPlayer, $playerId, $playerName){
+		
+		$playerCards = $this->getAllCardsOf($playerId);
+		$targetedPlayerCards = $this->getAllCardsOf($targetedPlayer["player_id"]);
+		
+		//put the player's cards in the targeted player's deck
+		if(count($playerCards) > 0){
+			
+			//get the ids of each type of cards
+			$cardIds=array();
+			$powerCardIds=array();
+			
+			foreach ($playerCards as $card) {
+				if($card["cardType"] == "powerCard"){
+					$powerCardIds[] = $card["id"];
+				}
+				else if($card["cardType"] == "card"){
+					$cardIds[] = $card["id"];
+				}
+			}
+			
+			if(count($cardIds) > 0){
+				$sql = "update card set location=".$targetedPlayer["player_id"]." where chosen=0 and id IN(".implode(",", $cardIds).")";
+				self::DbQuery( $sql );	
+			}
+
+			if(count($powerCardIds) > 0){
+				$sql = "update powerCard set location=".$targetedPlayer["player_id"]." where chosen=0 and id IN(".implode(",", $powerCardIds).")";
+				self::DbQuery( $sql );	
+			}
+			
+			//notify the player he loses all his cards 
+			self::notifyPlayer( $playerId, "loseCards", "", array(
+				"losedCards"=> $playerCards,
+				));	
+				
+			//notify his new cards to the targeted player 
+			self::notifyPlayer( $targetedPlayer["player_id"], "newCards", "", array(
+				"newCards"=> $playerCards,
+				));
+		}
+		//put the targeted player's cards in the player's deck
+		if(count($targetedPlayerCards) > 0){
+			
+			
+			//get the ids of each type of cards
+			$cardIds=array();
+			$powerCardIds=array();
+			
+			foreach ($targetedPlayerCards as $card) {
+				if($card["cardType"] == "powerCard"){
+					$powerCardIds[] = $card["id"];
+				}
+				else if($card["cardType"] == "card"){
+					$cardIds[] = $card["id"];
+				}
+			}
+			
+			if(count($cardIds) > 0){
+				$sql = "update card set location=".$playerId." where chosen=0 and id IN(".implode(",", $cardIds).")";
+				self::DbQuery( $sql );	
+			}
+
+			if(count($powerCardIds) > 0){
+				$sql = "update powerCard set location=".$playerId." where chosen=0 and id IN(".implode(",", $powerCardIds).")";
+				self::DbQuery( $sql );	
+			}
+			
+			//notify the targeted player he loses all his cards 
+			self::notifyPlayer( $targetedPlayer["player_id"], "loseCards", "", array(
+				"losedCards"=> $targetedPlayerCards,
+				));	
+				
+			//notify his new cards to the player 
+			self::notifyPlayer( $playerId, "newCards", "", array(
+				"newCards"=> $targetedPlayerCards,
+				));
+		}
+		
+			
+		//log the action
+		$this->log('${playerName} and ${targetedPlayer} switch their cards', 
+					array("playerName" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
+		
+		//notify the new number of cards of the two concerned players
+		$this->notifyNewNbOfCards($playerId);
+		$this->notifyNewNbOfCards($targetedPlayer["player_id"]);
+	}
+
+
 	function targetChosen($pawnId){
 		$playerId = self::getActivePlayerId();
 		$playerName = self::getActivePlayerName();
@@ -973,9 +1140,6 @@ class LeDernierPeuple extends Table
 		//get the targeted player id and name
 		$sql="select player_id,player_name from pawn inner join player on (pawn.playerId=player.player_id) where id=".$pawnId;
 		$targetedPlayer = self::getObjectFromDb( $sql );
-		
-		self::debug("Ce putain de name : ".$targetedPlayer["player_name"]);
-		self::debug("Implode : ".implode(",", $targetedPlayer));
 		
 		//get the power card 
 		$sql="select * from powerCard where location=".$playerId." and chosen=1";
@@ -996,18 +1160,22 @@ class LeDernierPeuple extends Table
 				break;
 			case "mace":
 				//mace => the targeted player pass the next turn
+				$this->playPowerCardMace($targetedPlayer);
 				
 				break;
 			case "curse":
 				//curse => the targeted player loses one point 
+				$this->playPowerCardCurse($targetedPlayer, $playerId, $playerName);
 				
 				break;
 			case "barter":
 				//barter => swap the cards with the targeted player
+				$this->playPowerCardBarter($targetedPlayer, $playerId, $playerName);
 				
 				break;
 			case "thief":
 				//thief => steal one point of the targeted player
+				$this->playPowerCardThief($targetedPlayer, $playerId, $playerName);
 				
 				break;
 				
@@ -1019,6 +1187,44 @@ class LeDernierPeuple extends Table
 		
 		// Finally, go to the next state
         $this->gamestate->nextState( "targetChosen" );
+	}
+
+
+	/**
+	 * Method which switched two pawns' position
+	 */
+	function switchPawns($firstPawnId, $secondPawnId){
+		
+		$playerId = self::getActivePlayerId();
+		$playerName = self::getActivePlayerName();
+		
+		//get the current pawns position
+		$sql="select tileId from pawn where id=".$firstPawnId;
+		$firstPawnTile = self::getUniqueValueFromDB($sql);
+		$sql="select tileId from pawn where id=".$secondPawnId;
+		$secondPawnTile = self::getUniqueValueFromDB($sql);
+		
+		//update the position
+		$sql="update pawn set tileId=".$secondPawnTile." where id=".$firstPawnId;
+		self::DbQuery($sql);
+		$sql="update pawn set tileId=".$firstPawnTile." where id=".$secondPawnId;
+		self::DbQuery($sql);
+		
+		
+		//notify the players
+		self::notifyAllPlayers( "movePawn", clienttranslate( '${playerName} switch two pawns position' ), array(
+                'playerId' => $playerId,
+                'playerName' => $playerName,
+                'tileId' => $secondPawnTile,
+                'pawnId' => $firstPawnId
+            ) );
+		self::notifyAllPlayers( "movePawn", '', array(
+            'playerId' => $playerId,
+            'tileId' => $firstPawnTile,
+            'pawnId' => $secondPawnId
+        ) );
+		
+		$this->gamestate->nextState( "pawnsSwitched" );
 	}
 
 
@@ -1372,7 +1578,24 @@ class LeDernierPeuple extends Table
 		}
 		else{
 			self::debug("Activate next player");
+			
 			$this->activeNextPlayer();
+			
+			//new player ID
+			$newPlayerId = self::getActivePlayerId();
+			
+			//check if the new player has been targeted by the mace power card
+			$macePlayerId = $this->readParameter("MACE_POWER");
+			if($macePlayerId && $macePlayerId == $newPlayerId){
+				$newPlayerName = self::getActivePlayerName();
+				$this->log('${playerName} is affected by the mace power card, he skips his turn', 
+					array("playerName" => $newPlayerName));
+				
+				$this->activeNextPlayer();
+				$this->destroyParameter("MACE_POWER");
+			}
+			
+			
 			$this->gamestate->nextState( 'next' );
 		}
 		

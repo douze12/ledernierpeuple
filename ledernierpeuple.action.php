@@ -106,11 +106,24 @@
         self::ajaxResponse();
 	}
 	
-	
+	/**
+	 * Called when the player has chosen the targeted player affected by a power card
+	 */
 	public function chooseTarget(){
 		self::setAjaxMode();
 		$pawnId = self::getArg( "pawnId", AT_posint, true );
         $result = $this->game->targetChosen($pawnId);
+        self::ajaxResponse();
+	}
+	
+	/**
+	 * Called when the player selected two pawns to switch with the power card Switch
+	 */
+	public function chooseSwitchedPawns(){
+		self::setAjaxMode();
+		$firstPawnId = self::getArg( "firstPawnId", AT_posint, true );
+		$secondPawnId = self::getArg( "secondPawnId", AT_posint, true );
+        $result = $this->game->switchPawns($firstPawnId, $secondPawnId);
         self::ajaxResponse();
 	}
 	

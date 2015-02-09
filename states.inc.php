@@ -81,7 +81,7 @@ $machinestates = array(
     		"type" => "activeplayer",
     		"possibleactions" => array( "choosePowerCard", "skipPowerCard" ),
     		"transitions" => array( "powerCardChosen" => 9, "skipPowerCard" => 10, "chooseTargetPlayer" => 4, 
-									"chooseTargetPawns" => 5)
+									"chooseSwitchedPawns" => 5)
 	),
 	
 	4 => array(
@@ -92,6 +92,15 @@ $machinestates = array(
     		"args" => "argPossibleTarget",
     		"possibleactions" => array( "chooseTarget" ),
     		"transitions" => array( "targetChosen" => 9)
+	),
+	
+	5 => array(
+			"name" => "chooseSwitchedPawns",
+    		"description" => clienttranslate('${actplayer} must choose two pawns to switch'),
+    		"descriptionmyturn" => clienttranslate('${you} must choose two pawns to switch'),
+    		"type" => "activeplayer",
+    		"possibleactions" => array( "chooseSwitchedPawns" ),
+    		"transitions" => array( "pawnsSwitched" => 9)
 	),
 	
 	9 => array(

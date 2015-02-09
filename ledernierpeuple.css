@@ -102,6 +102,10 @@
 	display: inline-table;
 }
 
+.selectedPawn{
+	opacity:0.5;
+}
+
 .pawn_000000{
 	background-image: url('img/pawns/pawn_000000.png');
 }
