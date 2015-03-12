@@ -486,9 +486,9 @@ class LeDernierPeuple extends Table
 				}
 			}
 		}
-		//check if we're on a dig tile and the player move one of his own pawn
-		else if ($tileId % 4 == 0 && $pawnPlayerId == $playerId){
-			$this->drawPowerCard($playerId);
+		//check if we're on a dig tile
+		else if ($tileId % 4 == 0){
+			$this->drawPowerCard($pawnPlayerId);
 		}
 
 		
