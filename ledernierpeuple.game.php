@@ -1145,6 +1145,15 @@ class LeDernierPeuple extends Table
 		$sql="select * from powerCard where location=".$playerId." and chosen=1";
 		$powerCard = self::getObjectFromDb( $sql );
 		
+		//check if the player targeted has the defense power card activated
+		$defensePlayer = $this->readParameter("DEFENSE_POWER");
+		if($defensePlayer && $defensePlayer == $targetedPlayer["player_id"]){
+			$this->destroyParameter("DEFENSE_POWER");
+			$this->log('Player ${playerName} is protected by the power card defense', 
+							array("playerName" => $targetedPlayer["player_name"]));
+			$this->gamestate->nextState( "targetChosen" );
+			return;
+		}
 		
 		switch($powerCard["name"]){
 			
