@@ -4,19 +4,19 @@ $gameinfos = array(
 
 
 // Game designer (or game designers, separated by commas)
-'designer' => 'John Doe',       
+'designer' => 'Louis Mauchet',       
 
 // Game artist (or game artists, separated by commas)
-'artist' => 'Jane Doe',         
+'artist' => 'Floris Leprat',         
 
 // Year of FIRST publication of this game. Can be negative.
-'year' => 2000,                 
+'year' => 2015,                 
 
 // Game publisher
-'publisher' => 'My Publishing Company',                     
+'publisher' => 'XII-Game',                     
 
 // Url of game publisher website
-'publisher_website' => 'http://www.mypublishingcompany.com/',   
+'publisher_website' => 'http://www.ledernierpeuple.com/',   
 
 // Board Game Geek ID of the publisher
 'publisher_bgg_id' => 1234,
