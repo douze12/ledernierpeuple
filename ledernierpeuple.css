@@ -93,6 +93,10 @@
 	cursor:pointer;
 }
 
+.pawnTile{
+	padding-top: 18px;
+}
+
 
 .pawn{
 	width : 28px;
