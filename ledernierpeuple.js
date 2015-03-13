@@ -101,7 +101,18 @@ function (dojo, declare) {
         	
         	//coordinates of the first tile
         	var top = 0;
-            var left = (nbTiles / 4) * 74;
+        	if(nbTiles == 20){
+        		left = 313;
+        	}
+        	else if (nbTiles == 16){
+        		left = 260;
+        	}
+        	else if (nbTiles == 12){
+        		left = 210;
+        	}
+        	else{
+        		console.error("TODO");
+        	}
             
             var angle = 0;
             
