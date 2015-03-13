@@ -239,7 +239,6 @@ function (dojo, declare) {
 		 */        
         putNbCards: function(nbCardsByPlayer){
 			for(var playerId in nbCardsByPlayer){
-				var playerScoreSpan = dojo.byId("player_score_"+playerId);
 				
 				//create html nodes
 				var nbCardHtml = '<span><span id="player_nbcard_'+playerId+'">'+nbCardsByPlayer[playerId]+'&nbsp;</span>';

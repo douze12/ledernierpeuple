@@ -49,6 +49,19 @@ $game_options = array(
             )
 
     */
+    
+    
+    100 => array(
+                'name' => totranslate('Play with visible score'),    
+                'values' => array(
+
+                            // A simple value for this option:
+                            1 => array( 'name' => totranslate('No') ),
+                            
+							2 => array( 'name' => totranslate('Yes') )
+
+                        )
+            )
 
 );
 

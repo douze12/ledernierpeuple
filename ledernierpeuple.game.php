@@ -41,6 +41,7 @@ class LeDernierPeuple extends Table
             //    "my_first_game_variant" => 100,
             //    "my_second_game_variant" => 101,
             //      ...
+            	"visible_score" => 100
         ) );
         
 	}
@@ -134,16 +135,23 @@ class LeDernierPeuple extends Table
     
         $current_player_id = self::getCurrentPlayerId();    // !! We must only return informations visible by this player !!
     
-        // Get information about players
-        // Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
-        $sql = "SELECT player_id id FROM player ";
-        $result['players'] = self::getCollectionFromDb( $sql );
-  
-        // TODO: Gather all information about current game situation (visible by player $current_player_id).
         
-        //get the score of the current player
-        $sql = "SELECT player_score score FROM player where player_id=".$current_player_id;
-       	$result['players'][$current_player_id]["score"] = self::getUniqueValueFromDB( $sql );
+        //if the visible_score option property is set to 2 => all the scores are visible
+        if(self::getGameStateValue("visible_score") == 2){
+        	$sql = "SELECT player_id id, player_score score FROM player ";
+			$result['players'] = self::getCollectionFromDb( $sql );
+        }
+		//if not only the current player score is send
+		else{
+			
+			$sql = "SELECT player_id id FROM player ";
+        	$result['players'] = self::getCollectionFromDb( $sql );
+			
+			//get the score of the current player
+			$sql = "SELECT player_score score FROM player where player_id=".$current_player_id;
+       		$result['players'][$current_player_id]["score"] = self::getUniqueValueFromDB( $sql );	
+		}
+        
         
         //get the tiles
         $sql = "SELECT * FROM tile order by id";
@@ -169,7 +177,8 @@ class LeDernierPeuple extends Table
 		self::debug( "###QUERY : ".$sql);
 		
 		$result["nbCards"] = self::getCollectionFromDb( $sql, true );
-  
+		
+	
         return $result;
     }
 
@@ -308,11 +317,8 @@ class LeDernierPeuple extends Table
 				//log
 				$this->log('Player ${playerName} earns ${nbPoints} point(s)', 
 							array("playerName" => $playerName, "nbPoints" => $nbPoints));	
-							
-				$newScores = self::getCollectionFromDb( "SELECT player_id, player_score FROM player where player_id=".$playerId, true );
-		        self::notifyPlayer( $playerId, "newScores", "", array(
-		            "scores" => $newScores
-		        ) );
+				
+				$this->notifNewScores(array($playerId));
 				
 				break;
 				
@@ -606,10 +612,7 @@ class LeDernierPeuple extends Table
 			//notify the new score to the player concerned
 			if($point != 0){
 				//notify the new scores
-				$newScores = self::getCollectionFromDb( "SELECT player_id, player_score FROM player where player_id=".$id, true );
-		        self::notifyPlayer( $id, "newScores", "", array(
-		            "scores" => $newScores
-		        ) );
+				$this->notifNewScores(array($id));
 			}
 		}
 
@@ -994,11 +997,8 @@ class LeDernierPeuple extends Table
 		self::DbQuery( $sql );
 		
 		//notify the new scores
-		$newScores = self::getCollectionFromDb( "SELECT player_id, player_score FROM player where player_id=".$targetedPlayer["player_id"], true );
-        self::notifyPlayer( $targetedPlayer["player_id"], "newScores", "", array(
-            "scores" => $newScores
-        ) );
-		
+		$this->notifNewScores(array($targetedPlayer["player_id"]));
+
 		$this->log('${playerName} remove a point from ${targetedPlayer}', 
 					array("playerName" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
 	}
@@ -1025,14 +1025,7 @@ class LeDernierPeuple extends Table
 		self::DbQuery( $sql );
 		
 		//notify the new scores
-		$newScores = self::getCollectionFromDb( "SELECT player_id, player_score FROM player where player_id=".$targetedPlayer["player_id"], true );
-        self::notifyPlayer( $targetedPlayer["player_id"], "newScores", "", array(
-            "scores" => $newScores
-        ) );
-		$newScores = self::getCollectionFromDb( "SELECT player_id, player_score FROM player where player_id=".$playerId, true );
-        self::notifyPlayer( $playerId, "newScores", "", array(
-            "scores" => $newScores
-        ) );
+		$this->notifNewScores(array($playerId, $targetedPlayer["player_id"]));
 		
 		$this->log('${playerName} steal a point from ${targetedPlayer}', 
 					array("playerName" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
@@ -1251,6 +1244,24 @@ class LeDernierPeuple extends Table
 	 */
 	function log($msg, $params){
 		self::notifyAllPlayers( "log", clienttranslate($msg), $params);
+	}
+	
+	
+	function notifNewScores($players){
+		$sql = "SELECT player_id, player_score FROM player where player_id IN (".implode( $players, ',' ).")";
+		
+		$newScores = self::getCollectionFromDb( $sql , true );
+	    
+		//we are in visible_score mode => we send the notif to every player
+		if(self::getGameStateValue("visible_score") == 2){
+			self::notifyAllPlayers( "newScores", "", array("scores" => $newScores));
+		}
+		else{
+			foreach ($players as $playerId){
+				self::notifyPlayer( $playerId, "newScores", "", array("scores" => array($playerId => $newScores[$playerId])));	
+			}
+				
+		}
 	}
 
     /*
