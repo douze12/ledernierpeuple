@@ -268,9 +268,11 @@ class LeDernierPeuple extends Table
 		
 		$playerName = self::getActivePlayerName();
 		
-		//notify the player
-		$this->log('${playerName} use the power card <b>${cardName}</b>', 
+		//notify the players unless it's the power card defense
+		if($powerCard["name"] != "defense"){
+			$this->log('${playerName} use the power card <b>${cardName}</b>', 
 					array("playerName"=>$playerName, "cardName" => $powerCard["name"]));
+		}
 					
 		
 		switch($powerCard["name"]){
