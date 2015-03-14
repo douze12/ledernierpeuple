@@ -28,6 +28,20 @@ function (dojo, declare) {
             // Here, you can init the global variables of your user interface
             // Example:
             // this.myGlobalValue = 0;
+            
+            this.powerCardDesc = [];
+            this.powerCardDesc[1] = "Steal 1 card from another player";
+            this.powerCardDesc[2] = "Draw 1 move card and 1 power card";
+            this.powerCardDesc[3] = "Protect from an attack or a power card";
+            this.powerCardDesc[4] = "Earn 2 points";
+            this.powerCardDesc[5] = "Remove 1 card from another player";
+            this.powerCardDesc[6] = "Skip the turn of another player";
+            this.powerCardDesc[7] = "Switch 2 pawns";
+            this.powerCardDesc[8] = "Earn 1 point";
+            this.powerCardDesc[9] = "Remove 1 point from another player";
+            this.powerCardDesc[10] = "Swap all your cards with those af another player";
+            this.powerCardDesc[11] = "Play 2 turns";
+            this.powerCardDesc[12] = "Steal 1 point from another player";
 
         },
         
@@ -220,7 +234,13 @@ function (dojo, declare) {
 	                bgPosition : bgPosition
 	            } ) , 'cards' );
 	            
-	            
+	            if(cards[idx].cardType == "powerCard"){
+	            	var desc = this.powerCardDesc[cards[idx].id];
+	            	if(desc){
+	            		var idElem = "powerCard_"+cards[idx].id;
+	            		this.addTooltip(idElem, _(desc), '');	
+	            	}
+	            }
 	            //dojo.fx.slideTo({node:'card_'+cards[idx].id,top : top, left : left, unit: 'px', duration:1000, delay:2000}).play();
 	            //left+=120;
         	}
