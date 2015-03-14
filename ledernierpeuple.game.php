@@ -464,17 +464,19 @@ class LeDernierPeuple extends Table
 				}
 				//we have more than one pawn on the other tile
 				else{
+					//check if all the pawns belong to the same player
+					$lastPlayerId = NULL;
+					$allSamePlayer = TRUE;
+					
 					//we need to check if the player who made the attack owns one of the pawns on the other tile
 					//if he does, he automatically attacks with it
-					$attack = FALSE;
 					foreach ($result as $pawn) {
 						if($pawn["playerId"] == $playerId){
 							$this->attack(array("id"=>$playerId, "name"=>$playerName), 
 										  array("id"=>$pawnPlayerId, "name"=>$pawnPlayerName),
 									  	  array("id"=>$playerIdAttacked, "name"=>$playerNameAttacked),
 										  array("id"=>$playerId, "name"=>$playerName));
-							$attack = TRUE;
-							
+						
 							//we add the two pawns to be teleported after the move
 							$teleportPawns[] = $pawnId;
 							$teleportPawns[] = $pawn["id"];
@@ -483,9 +485,31 @@ class LeDernierPeuple extends Table
 							
 							break;
 						}
+						if($lastPlayerId != NULL && $lastPlayerId != $pawn["playerId"]){
+							$allSamePlayer = FALSE;
+						}
+						$lastPlayerId = $pawn["playerId"];
 					}
+					//all the possible pawns belong to the same player => we can attack directly
+					if(!$attackFlag && $allSamePlayer){
+						$sql = "select player_name from player where player_id=".$lastPlayerId;
+						$otherPawnPlayerName = self::getUniqueValueFromDB( $sql );
+						
+						$this->attack(array("id"=>$playerId, "name"=>$playerName), 
+										  array("id"=>$pawnPlayerId, "name"=>$pawnPlayerName),
+									  	  array("id"=>$playerIdAttacked, "name"=>$playerNameAttacked),
+										  array("id"=>$lastPlayerId, "name"=>$otherPawnPlayerName));
+
+						//we add the two pawns to be teleported after the move
+						$teleportPawns[] = $pawnId;
+						$firstResult = reset($result);
+						$teleportPawns[] = $firstResult["id"];
+
+						$attackFlag = TRUE;
+					}
+					
 					//if the pawns on the other tile does'nt belong to the active player, he has to make a choice
-					if(!$attack){
+					if(!$attackFlag){
 						$chooseCombinationFlag = TRUE;
 						$this->createPrivateParameter("otherTileId", $otherTileId);
 						$this->createPrivateParameter("playerIdAttacked", $playerIdAttacked);
