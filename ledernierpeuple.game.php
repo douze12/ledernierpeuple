@@ -646,14 +646,18 @@ class LeDernierPeuple extends Table
 				$card = $newCards[$i];
 				$pawn = $pawns[$i];
 				
+				//get the player name of the pawn
+				$sql="select pl.player_name from player pl, pawn pa where pl.player_id=pa.playerId and pa.id=".$pawn["id"];
+				$pawnPlayerName = self::getUniqueValueFromDB( $sql );
+				
 				$sql = "update pawn set tileId=".$card["teleportTile"]." where id=".$pawn["id"];
 				self::DbQuery( $sql );
 				
 				$teleport[] = array("pawnId"=>$pawn["id"], "tileId" => $card["teleportTile"]);
 				$cardIds[] = $card["id"];
 				
-				$this->log('The pawn ${pawnId} is teleported on tile ${tileId}', 
-							array('pawnId' => $pawn["id"], "tileId" => $card["teleportTile"]));
+				$this->log('${pawnPlayerName}\'s pawn is teleported on tile ${tileId}', 
+							array('pawnPlayerName' => $pawnPlayerName, "tileId" => $card["teleportTile"]));
 			}
 			
 			//put the cards in the trash
