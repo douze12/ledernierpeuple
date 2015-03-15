@@ -4,7 +4,7 @@ $gameinfos = array(
 
 
 // Game designer (or game designers, separated by commas)
-'designer' => 'Louis Mauchet',       
+'designer' => 'Fabrice Belot',       
 
 // Game artist (or game artists, separated by commas)
 'artist' => 'Floris Leprat',         
