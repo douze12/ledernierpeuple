@@ -1667,8 +1667,15 @@ class LeDernierPeuple extends Table
     {
     	$statename = $state['name'];
     	
+		
         if ($state['type'] == "activeplayer") {
             switch ($statename) {
+            	case "choosePowerCard":
+					$this->gamestate->nextState( "skipPowerCard" );
+                	break;
+				case "chooseCard":
+					$this->gamestate->nextState( "skipTurn" );
+                	break;
                 default:
                     $this->gamestate->nextState( "zombiePass" );
                 	break;
