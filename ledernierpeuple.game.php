@@ -48,7 +48,7 @@ class LeDernierPeuple extends Table
 	
     protected function getGameName( )
     {
-        return "Le dernier peuple";
+        return "ledernierpeuple";
     }	
 
     /*
