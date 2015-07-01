@@ -272,10 +272,10 @@ function (dojo, declare) {
 			for(var playerId in nbCardsByPlayer){
 				
 				//create html nodes
-				var nbCardHtml = '<span><span id="player_nbcard_'+playerId+'">'+nbCardsByPlayer[playerId]+'&nbsp;</span>';
-				nbCardHtml += '<div class="icon16 icon16_hand"></div>&nbsp;&bull;&nbsp;</span>';
+				var nbCardHtml = '<div class="boardblock"><span id="player_nbcard_'+playerId+'">'+nbCardsByPlayer[playerId]+'&nbsp;</span>';
+				nbCardHtml += '<div class="icon16 icon16_hand"></div></div>';
 				
-				dojo.place(nbCardHtml, "player_score_"+playerId, "before");
+				dojo.place(nbCardHtml, dojo.query("#player_board_"+playerId+" .player_score")[0]);
 			}
         },
         
