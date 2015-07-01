@@ -174,6 +174,7 @@ $machinestates = array(
 			"name" => "nextPlayer",
     		"action" => "stNextPlayer",
     		"type" => "game",
+    		"updateGameProgression" => true,
     		"transitions" => array( "next" => 2, "victory" => 99)
 	),
 	

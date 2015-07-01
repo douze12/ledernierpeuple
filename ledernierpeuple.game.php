@@ -1306,9 +1306,49 @@ class LeDernierPeuple extends Table
     */
     function getGameProgression()
     {
-        // TODO: compute and return the game progression
-
-        return 0;
+        //check if a player rich the total of points necessary to win
+		$sql = "select max(player_score) from player"; 
+		
+		$maxScore = self::getUniqueValueFromDB( $sql );
+		
+		//get the progress by step in order to hide the a minimum the score of the leader
+		$progress = 0;
+		if($maxScore <= 2){
+			$progress = 0;
+		}	
+		else if($maxScore <= 5){
+			$progress = 25;
+		}
+		else if($maxScore <= 8){
+			$progress = 50;
+		}
+		else if($maxScore <= 11){
+			$progress = 75;
+		}
+		else {
+			$progress = 100;
+		}
+		
+		$lastProgress = $this->readParameter("LAST_PROGRESS");
+		
+		//if the saved progression is superior to the current progress
+		//which can happen if the leader loses some points, 
+		//we display the previous progression
+		if($lastProgress != NULL && $lastProgress > $progress){
+			return $lastProgress;
+		}
+		
+		//save the progression if it has changed
+		if($lastProgress != $progress){
+			if($lastProgress != NULL){
+				$this->destroyParameter("LAST_PROGRESS");	
+			}
+			$this->createPublicParameter("LAST_PROGRESS", $progress);	
+		}
+		
+		
+		
+        return $progress;
     }
 
 
