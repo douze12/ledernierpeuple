@@ -66,7 +66,7 @@ class LeDernierPeuple extends Table
         // Set the colors of the players with HTML color code
         // The default below is red/green/blue/orange/brown
         // The number of colors defined here must correspond to the maximum number of players allowed for the gams
-        $default_colors = array( "0000FF", "FCC838", "FF0000", "719D3E", "000000" );
+        $default_colors = array( "0000FF", "FFA500", "FF0000", "719D3E", "000000" );
 		
  
         // Create players
