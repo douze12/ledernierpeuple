@@ -77,7 +77,7 @@ $machinestates = array(
 	3 => array(
 			"name" => "choosePowerCard",
     		"description" => clienttranslate('${actplayer} can choose a Power card'),
-    		"descriptionmyturn" => clienttranslate('${you} can choose a Power card or <a id="skipPowerCardLink">Skip</a>'),
+    		"descriptionmyturn" => clienttranslate('${you} can choose a Power card'),
     		"type" => "activeplayer",
     		"possibleactions" => array( "choosePowerCard", "skipPowerCard" ),
     		"transitions" => array( "powerCardChosen" => 9, "skipPowerCard" => 10, "chooseTargetPlayer" => 4, 
@@ -121,7 +121,7 @@ $machinestates = array(
     10 => array(
     		"name" => "chooseCard",
     		"description" => clienttranslate('Wait ${actplayer} choose a card'),
-    		"descriptionmyturn" => clienttranslate('${you} must choose a card or <a id="skipLink">Skip</a>'),
+    		"descriptionmyturn" => clienttranslate('${you} must choose a card'),
     		"type" => "activeplayer",
     		"possibleactions" => array( "chooseCard", "skipTurn" ),
     		"transitions" => array( "cardChosen" => 11, "skipTurn" => 20)

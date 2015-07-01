@@ -384,7 +384,6 @@ function (dojo, declare) {
            	case 'chooseCard':
            	
            		if(args.active_player == this.player_id){
-           			dojo.connect(dojo.byId("skipLink"), 'click', this, 'onSkipClick');
            			var me = this;
            			dojo.query(".card.moveCard").forEach(
 				          function(item, index, array){
@@ -406,7 +405,6 @@ function (dojo, declare) {
            	case 'choosePowerCard':
            	
            		if(args.active_player == this.player_id){
-           			dojo.connect(dojo.byId("skipPowerCardLink"), 'click', this, 'onSkipPowerCardClick');
            			var me = this;
            			dojo.query(".card.powerCard").forEach(
 				          function(item, index, array){
@@ -548,6 +546,18 @@ function (dojo, declare) {
                     this.addActionButton( 'button_3_id', _('Button 3 label'), 'onMyMethodToCall3' ); 
                     break;
 */
+
+				case "chooseCard":
+					this.addActionButton( 'skipCardButton', _('Skip'), 'onSkipClick' ); 
+				
+					break;
+					
+					
+				case "choosePowerCard":
+					this.addActionButton( 'skipPowerCardButton', _('Skip'), 'onSkipPowerCardClick' );
+				
+					break;
+
                 }
             }
         },        
