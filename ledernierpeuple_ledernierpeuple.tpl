@@ -30,6 +30,7 @@
 		<td>
 			<div id="board">
 				<div id="tiles"></div>
+				<div id="pawns"></div>
 			</div>
 			<div id="chosenCard"></div>
 		</td>

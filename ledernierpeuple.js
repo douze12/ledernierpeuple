@@ -72,11 +72,18 @@ function (dojo, declare) {
             
             // TODO: Set up your game interface here, according to "gamedatas"
             
+            this.tiles = gamedatas.tiles;
+            this.pawns = gamedatas.pawns;
+            
             //put the tiles on the board
-            this.putTilesOnBoard(gamedatas.tiles);
+            this.putTilesOnBoard(this.tiles);
             
             //put the pawns on the board
-        	this.putPawnsOnBoard(gamedatas.pawns, gamedatas.players, gamedatas.tiles);	
+            var that = this;
+            setTimeout(function(){
+            	that.putPawnsOnBoard(that.pawns, gamedatas.players, that.tiles);	
+            }, 1000);
+        		
             
             //put the cards
         	this.putCards(gamedatas.cards);	
@@ -135,6 +142,7 @@ function (dojo, declare) {
 			var panelWidth = 2 * tileHeight;//tileHeight because the tiles are horizontals
 
         	for(var idx in tiles){
+        		tiles[idx].nbPawns = 0;
         		
         		var bgPosition = (idx - 1) * - 74;
         		
@@ -147,6 +155,7 @@ function (dojo, declare) {
 	            //keep the coordinates to use it during the pawns placement 
 	            tiles[idx].top = top;
 	            tiles[idx].left = left;
+	            tiles[idx].angle = angle;
 	            
 	            //set the rotattion style
 	            $('tile_'+tiles[idx].id).style.transform="rotate("+angle+"deg)";
@@ -189,33 +198,143 @@ function (dojo, declare) {
          */
         putPawnsOnBoard : function (pawns, players, tiles){
         	
+        	
         	for(var idx in pawns){
         		
         		var player = players[pawns[idx].playerId];
         		
+        		pawns[idx].angle = 0;
         		
         		//create the html node from the jstpl expression
 	        	dojo.place( this.format_block( 'jstpl_pawn', {
 	                color: player.color,
 	                id: pawns[idx].id
-	            } ) , 'pawnTile_'+ pawns[idx].tileId );
+	            } ) , 'pawns' );
+	           
 	            
-	            
-        		var tile = tiles[pawns[idx].tileId];
+	            //set the same transform origin than the tile 
+        		$('pawn_'+pawns[idx].id).style.transformOrigin = $('tile_'+pawns[idx].tileId).style.transformOrigin;
         		
-	            //coordinates of the pawn
-	            var top = parseInt(tile.top) + 32;
-	            var left = parseInt(tile.left);
-	            if((idx - 1) % 2 == 0){
-	            	left += 5;
-	            }
-	            else{
-	            	left += 30;
-	            }
-	            
-	            
-	            //dojo.fx.slideTo({node:'pawn_'+pawns[idx].id,top : top, left : left, unit: 'px', duration:1000, delay:1000}).play();
+        		
+    			this.movePawnToTile(pawns[idx].id, pawns[idx].tileId, 0);	
+        		
         	}
+        },
+        
+        /**
+         * 
+         */
+        convert : function(left, top, angle){
+        	var rad = (angle / 180) * Math.PI;
+        	var newLeft = (Math.cos(rad) * left) - (Math.sin(rad) * top);
+        	var newTop = (Math.cos(rad) * top) + (Math.sin(rad) * left);
+        	
+        	return {left : newLeft, top : newTop};
+        },
+        
+        /**
+         * Replace the pawns of a tile
+         */
+        replacePawns : function(tileIdx){
+        	var nbPawnOnTile = 0;
+        	var tileAngle = parseInt(this.tiles[tileIdx].angle);
+        	for (var idx in this.pawns){
+        		var pawn = this.pawns[idx];
+        		if(pawn.tileIdx == tileIdx){
+        			var marginLeft = 5 + (nbPawnOnTile % 2) * 35; 
+        			var marginTop = 25 + parseInt(nbPawnOnTile / 2) * 30;
+        			
+        			var realMargin = this.convert(marginLeft, marginTop, tileAngle);
+        			
+        			//new position of the pawn
+		        	var top = parseInt(this.tiles[tileIdx].top) + realMargin.top;
+		        	var left = parseInt(this.tiles[tileIdx].left) + realMargin.left;
+		        	
+		        	$('pawn_'+idx).style.top = top+"px";
+		        	$('pawn_'+idx).style.left = left+"px";
+		        	nbPawnOnTile++;
+        		}
+        	}
+        },
+        
+        /**
+         * Move the pawn on a new tile
+         */
+        movePawnToTile : function(pawnIdx, tileIdx, duration){
+        	var currentTileIdx = this.pawns[pawnIdx].tileIdx;
+        	
+        	//the pawn is already on the good tile, we just blink the pawn
+        	if(tileIdx == currentTileIdx){
+        		dojo.fadeOut({
+	            	node:"pawn_"+pawnIdx,
+	            	onEnd : function(){
+	            		dojo.fadeIn({node:'pawn_'+pawnIdx}).play();
+	            	}
+            	}).play();
+            	return;
+        	}
+        	
+        	//get the number of pawns on the tile
+        	var nbPawn = this.tiles[tileIdx].nbPawns;
+        	//angle of the tile 
+        	var angle = parseInt(this.tiles[tileIdx].angle);
+        	
+        	//compute the margin of the pawn from the top-left of the tile
+        	var marginLeft = 5 + (nbPawn % 2) * 35; 
+        	var marginTop = 25 + parseInt(nbPawn / 2) * 30;
+        	//convert the margin to the real values with the angle of the pawn
+        	var realMargin = this.convert(marginLeft, marginTop, angle);
+        	
+        	//new position of the pawn
+        	var top = parseInt(this.tiles[tileIdx].top) + realMargin.top;
+        	var left = parseInt(this.tiles[tileIdx].left) + realMargin.left;
+    	
+    		//get the initial top value
+    		var topBegin = parseInt($('pawn_'+pawnIdx).style.top) || 0;
+    		//get the current angle of the pawn 
+        	var angleBegin = this.pawns[pawnIdx].angle;
+        	
+        	var that = this;
+        	dojo.fx.slideTo(
+        		{	node:'pawn_'+pawnIdx, 
+        			top : top, 
+        			left : left, 
+        			unit: 'px', 
+        			duration:duration,
+        			//called each frame
+        			onAnimate : function(values){
+        				var curTop = parseInt(values.top);
+        				//get the ratio of the elapsed animation
+        				var ratio = Math.min((curTop - topBegin) / (top - topBegin), 1);
+        				
+        				//set the new angle value
+        				if(angle >= angleBegin){
+        					var newAngle = angleBegin + (ratio * (angle - angleBegin));	
+        				} else{
+        					var newAngle = angleBegin - (ratio * (angleBegin - angle));
+        				}
+        				
+        				$('pawn_'+pawnIdx).style.transform = "rotate("+newAngle+"deg)";
+        			},
+        			onEnd : function(){
+        				$('pawn_'+pawnIdx).style.transform = "rotate("+angle+"deg)";
+        				var prevTileIdx = that.pawns[pawnIdx].tileIdx;
+        				//increment the number of the pawns on the new tile and decrement the number of the previous tile
+        				that.tiles[tileIdx].nbPawns+=1;
+        				if(prevTileIdx && that.tiles[prevTileIdx].nbPawns > 0){
+        					that.tiles[prevTileIdx].nbPawns-=1;	
+        				}
+        				//change the angle and tile index of the pawn object
+        				that.pawns[pawnIdx].angle = angle;
+        				that.pawns[pawnIdx].tileIdx = tileIdx;
+        				
+        				if(currentTileIdx){
+        					that.replacePawns(currentTileIdx);	
+        				}
+        			}
+        		}
+        		).play();
+        	
         },
         
         
@@ -341,14 +460,19 @@ function (dojo, declare) {
        
        
        movePawn : function(pawnId, tileId){
+       	this.movePawnToTile(pawnId, tileId, 1000);
        		
-            dojo.fadeOut({
+            /*dojo.fadeOut({
             	node:"pawn_"+pawnId,
             	onEnd : function(){
 		        	dojo.place( "pawn_"+ pawnId, 'pawnTile_'+ tileId, "last" );
             		dojo.fadeIn({node:'pawn_'+pawnId}).play();
             	}
-            }).play();
+            }).play();*/
+           //this.slideToObject("pawn_"+ pawnId, 'tile_'+ tileId).play();
+           //var tile = dojo.byId("tile_"+tileId);
+           
+           //dojo.fx.slideTo({node:"pawn_"+ pawnId,top : tile.position.top, left : tile.position.left, unit: 'px', duration:1000}).play();
        },
 
         ///////////////////////////////////////////////////
