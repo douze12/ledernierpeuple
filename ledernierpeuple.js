@@ -500,9 +500,9 @@ function (dojo, declare) {
            
            	case 'useCard':
            		//this.hideDeck();
+           		this.showChosenCard(args.args.cardId);
            		if(args.active_player == this.player_id){
            			this.updatePossibleMoves( args.args.possibleMoves );
-           			this.showChosenCard(args.args.cardId);	
            		}
            		break;
            	case 'chooseCard':
@@ -579,6 +579,10 @@ function (dojo, declare) {
                 
                 break;
            */
+          	case 'useCard' :
+          		dojo.setStyle("chosenCard", {display:"none"});
+          		break;
+          		
           	case 'chooseCard':
       			dojo.query(".card.moveCard").forEach(
 			          function(item, index, array){
@@ -838,7 +842,6 @@ function (dojo, declare) {
 					}
 				});
 				
-				dojo.setStyle("chosenCard", {display:"none"});
             }
             
        },
