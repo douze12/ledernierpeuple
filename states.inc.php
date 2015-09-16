@@ -120,7 +120,7 @@ $machinestates = array(
 
     10 => array(
     		"name" => "chooseCard",
-    		"description" => clienttranslate('Wait ${actplayer} choose a card'),
+    		"description" => clienttranslate('${actplayer} must choose a card'),
     		"descriptionmyturn" => clienttranslate('${you} must choose a card'),
     		"type" => "activeplayer",
     		"possibleactions" => array( "chooseCard", "skipTurn" ),
@@ -129,7 +129,7 @@ $machinestates = array(
     
     11 => array(
 			"name" => "useCard",
-    		"description" => clienttranslate('${actplayer} use his card'),
+    		"description" => clienttranslate('${actplayer} must use his card'),
     		"descriptionmyturn" => clienttranslate('${you} must choose a pawn to move'),
     		"args" => "argPossibleMoves",
     		"type" => "activeplayer",
