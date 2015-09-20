@@ -910,7 +910,7 @@ class LeDernierPeuple extends Table
 						" union all".
 						" select id,'powerCard' as cardType from powerCard where chosen=0 and location=".$playerId;
 				
-		$targetedCards = self::getCollectionFromDB( $sql );
+		$targetedCards = self::getObjectListFromDB( $sql );
 		
 		return $targetedCards;
 	}
