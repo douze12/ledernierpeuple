@@ -79,10 +79,7 @@ function (dojo, declare) {
             this.putTilesOnBoard(this.tiles);
             
             //put the pawns on the board
-            var that = this;
-            setTimeout(function(){
-            	that.putPawnsOnBoard(that.pawns, gamedatas.players, that.tiles);	
-            }, 1000);
+			this.putPawnsOnBoard(this.pawns, gamedatas.players, this.tiles);	
         		
             
             //put the cards
@@ -215,10 +212,20 @@ function (dojo, declare) {
 	            //set the same transform origin than the tile 
         		$('pawn_'+pawns[idx].id).style.transformOrigin = $('tile_'+pawns[idx].tileId).style.transformOrigin;
         		
-        		
-    			this.movePawnToTile(pawns[idx].id, pawns[idx].tileId, 0);	
+        		$('pawn_'+pawns[idx].id).style.visibility = "hidden";
         		
         	}
+        	
+        	//after a while, move the pawns to the correct place
+        	var that = this;
+    		setTimeout(function(){
+    			for(var idx in pawns){
+    				$('pawn_'+pawns[idx].id).style.visibility = "visible";
+    				that.movePawnToTile(pawns[idx].id, pawns[idx].tileId, 0);	
+    			}
+    		}, 1000);
+        	
+        	
         },
         
         /**
@@ -291,8 +298,24 @@ function (dojo, declare) {
     	
     		//get the initial top value
     		var topBegin = parseInt($('pawn_'+pawnIdx).style.top) || 0;
+    		//get the initial top value
+    		var leftBegin = parseInt($('pawn_'+pawnIdx).style.left) || 0;
     		//get the current angle of the pawn 
         	var angleBegin = this.pawns[pawnIdx].angle;
+        	
+        	if(angle - angleBegin > 180){
+        		angle -= 360;
+        	}
+        	else if(angleBegin - angle > 180){
+        		angle += 360;
+        	}
+        	
+        	//increment the number of the pawns on the new tile and decrement the number of the previous tile
+        	var prevTileIdx = this.pawns[pawnIdx].tileIdx;
+			this.tiles[tileIdx].nbPawns+=1;
+			if(prevTileIdx && this.tiles[prevTileIdx].nbPawns > 0){
+				this.tiles[prevTileIdx].nbPawns-=1;	
+			}
         	
         	var that = this;
         	dojo.fx.slideTo(
@@ -303,9 +326,16 @@ function (dojo, declare) {
         			duration:duration,
         			//called each frame
         			onAnimate : function(values){
-        				var curTop = parseInt(values.top);
-        				//get the ratio of the elapsed animation
-        				var ratio = Math.min((curTop - topBegin) / (top - topBegin), 1);
+        				if(Math.abs(top - topBegin) > Math.abs(left - leftBegin)){
+	        				var curTop = parseInt(values.top);
+	        				//get the ratio of the elapsed animation
+	        				var ratio = Math.min((curTop - topBegin) / (top - topBegin), 1);	
+        				} else{
+        					var curLeft = parseInt(values.left);
+	        				//get the ratio of the elapsed animation
+	        				var ratio = Math.min((curLeft - leftBegin) / (left - leftBegin), 1);
+        				}
+        				
         				
         				//set the new angle value
         				if(angle >= angleBegin){
@@ -318,14 +348,8 @@ function (dojo, declare) {
         			},
         			onEnd : function(){
         				$('pawn_'+pawnIdx).style.transform = "rotate("+angle+"deg)";
-        				var prevTileIdx = that.pawns[pawnIdx].tileIdx;
-        				//increment the number of the pawns on the new tile and decrement the number of the previous tile
-        				that.tiles[tileIdx].nbPawns+=1;
-        				if(prevTileIdx && that.tiles[prevTileIdx].nbPawns > 0){
-        					that.tiles[prevTileIdx].nbPawns-=1;	
-        				}
         				//change the angle and tile index of the pawn object
-        				that.pawns[pawnIdx].angle = angle;
+        				that.pawns[pawnIdx].angle = ( (angle % 360) + 360) % 360;
         				that.pawns[pawnIdx].tileIdx = tileIdx;
         				
         				if(currentTileIdx){
@@ -758,6 +782,21 @@ function (dojo, declare) {
             }   
        },
        
+       /**
+        * Reset the possible moves indicators and disconnect the listeners on the tiles
+        */
+       resetPossibleMoves: function(){
+       		dojo.query(".tile.possibleMove").forEach(function(node, index, nodelist){
+					dojo.removeClass(node, "possibleMove");
+					//disconnect listeners on the element
+					if(node.onclickListener){
+						for(var i = 0; i < node.onclickListener.length; i++){
+							dojo.disconnect(node.onclickListener[i]);		
+						}
+						node.onclickListener = null;
+					}
+				});
+       },
               
        /**
         * Method called when the player click on one of his pawn to move it
@@ -766,8 +805,8 @@ function (dojo, declare) {
        		// Stop this event propagation
 			dojo.stopEvent( event );
 			
-			dojo.query(".possibleMove").removeClass("possibleMove");
-
+			this.resetPossibleMoves();
+			
 			//get the pawn id
             var split = event.currentTarget.id.split('_');
             var pawnId = split[1];
@@ -828,19 +867,12 @@ function (dojo, declare) {
 					dojo.style(node, "cursor", "auto");
 					//disconnect listener on the element
 					if(node.onclickListener){
-						dojo.disconnect(node.onclickListener);	
+						dojo.disconnect(node.onclickListener);
+						node.onclickListener = null;	
 					}
 				});
 				
-				dojo.query(".tile.possibleMove").forEach(function(node, index, nodelist){
-					dojo.removeClass(node, "possibleMove");
-					//disconnect listeners on the element
-					if(node.onclickListener){
-						for(var i = 0; i < node.onclickListener.length; i++){
-							dojo.disconnect(node.onclickListener[i]);		
-						}
-					}
-				});
+				this.resetPossibleMoves();
 				
             }
             
