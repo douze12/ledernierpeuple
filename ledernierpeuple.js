@@ -188,6 +188,9 @@ function (dojo, declare) {
            //set the location of the card selected div
            $("chosenCard").style.left = (panelWidth / 2) - (100 / 2) + 10 + "px";
            $("chosenCard").style.top = (panelHeight / 2) - (139 / 2) + "px";
+           
+           $("chosenPowerCard").style.left = (panelWidth / 2) - (100 / 2) + 10 + "px";
+           $("chosenPowerCard").style.top = (panelHeight / 2) - (139 / 2) + "px";
         },
         
         /**
@@ -473,6 +476,22 @@ function (dojo, declare) {
        		var bgPosition = (cardId - 1) * -100;
        		dojo.setStyle("chosenCard", {backgroundPosition : bgPosition+"px", display:"block"});
        },
+       
+       showChosenPowerCard : function(cardId){
+       		var bgPosition = (cardId - 1) * -100;
+       		
+       		var chosenCardElt=dojo.byId("chosenPowerCard");
+       		dojo.setStyle(chosenCardElt, {backgroundPosition : bgPosition+"px"});
+       		
+       		dojo.fadeIn({
+       			node:chosenCardElt,
+       			duration:100,
+       			onEnd : function(){
+       				dojo.fadeOut({node:chosenCardElt, duration:100, delay:2000}).play();
+       			}
+   			}).play();
+       },
+       
        
        /*hideDeck : function(){
        		$("deck").style.display = "none";
@@ -1064,6 +1083,8 @@ function (dojo, declare) {
             dojo.subscribe('loseCards', this, "notif_loseCards");
             
             dojo.subscribe('teleportAfterMove', this, "notif_teleportAfterMove");
+            
+            dojo.subscribe('powerCardChosen', this, "notif_powerCardChosen");
             // Wait 1 sec after executing the teleportAfterMove handler
             //this.notifqueue.setSynchronous( 'teleportAfterMove', 1000 );
                
@@ -1126,7 +1147,13 @@ function (dojo, declare) {
 		    	var tileId = notif.args.teleport[i].tileId;
                 this.movePawn(pawnId, tileId);
             }    	
-        }
+        },
+        
+        notif_powerCardChosen : function(notif){
+        	console.log(notif);
+        	
+    		this.showChosenPowerCard(notif.args.cardId);
+        },
         
         /*
         Example:

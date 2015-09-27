@@ -160,6 +160,15 @@
 	position: absolute;
 }
 
+#chosenPowerCard{
+	width : 100px;
+	height: 145px;	
+	background-image: url('img/powerCards/all.jpg');;
+	position: absolute;
+	opacity: 0;
+}
+
+
 #skipLink, #skipPowerCardLink{
 	color:red;
 	cursor:pointer;

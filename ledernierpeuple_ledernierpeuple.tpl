@@ -33,6 +33,7 @@
 				<div id="pawns"></div>
 			</div>
 			<div id="chosenCard"></div>
+			<div id="chosenPowerCard"></div>
 		</td>
 		<td style="width:100%">
 			<div id="deck" class="whiteblock">

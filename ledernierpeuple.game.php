@@ -273,6 +273,8 @@ class LeDernierPeuple extends Table
 			$this->log('${playerName} uses the power card <b>${cardName}</b>', 
 					array("playerName"=>$playerName, "cardName" => $powerCard["name"]));
 		}
+		
+		self::notifyAllPlayers( "powerCardChosen", "", array('cardId' => $cardId));
 					
 		
 		switch($powerCard["name"]){
