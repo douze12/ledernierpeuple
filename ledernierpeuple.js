@@ -650,7 +650,7 @@ function (dojo, declare) {
 	       		for(var pawnId in this.possiblePawns){
 	       			var pawnElt = dojo.byId('pawn_'+pawnId);
 	       			dojo.setStyle(pawnElt, {cursor : 'auto'});
-	       			if(pawnElt.onclickCombinationListener){
+	       			if(pawnElt.onclickTargetListener){
 	       				dojo.disconnect(pawnElt.onclickTargetListener);	
 	       			}
 	       		}
