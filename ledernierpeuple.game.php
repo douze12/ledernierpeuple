@@ -1003,8 +1003,10 @@ class LeDernierPeuple extends Table
 	/**
 	 * Function use to apply the effects of the power card mace
 	 */
-	function playPowerCardMace($targetedPlayer){
+	function playPowerCardMace($targetedPlayer, $playerName){
 		$this->createPublicParameter("MACE_POWER", $targetedPlayer["player_id"]);
+		$this->log('${playerName} uses mace on ${targetedPlayer}', 
+					array("playerName" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
 	}
 	
 	
@@ -1192,7 +1194,7 @@ class LeDernierPeuple extends Table
 				break;
 			case "mace":
 				//mace => the targeted player pass the next turn
-				$this->playPowerCardMace($targetedPlayer);
+				$this->playPowerCardMace($targetedPlayer, $playerName);
 				
 				break;
 			case "curse":
