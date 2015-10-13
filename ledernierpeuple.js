@@ -1152,7 +1152,11 @@ function (dojo, declare) {
         notif_powerCardChosen : function(notif){
         	console.log(notif);
         	
-    		this.showChosenPowerCard(notif.args.cardId);
+        	//show the power card chosen (except for defense)
+        	if(notif.args.cardId != 3){
+        		this.showChosenPowerCard(notif.args.cardId);	
+        	}
+    		
         },
         
         /*
