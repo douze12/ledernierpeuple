@@ -719,7 +719,7 @@ function (dojo, declare) {
 */
 
 				case "chooseCard":
-					this.addActionButton( 'skipCardButton', _('Skip'), 'onSkipClick' ); 
+					this.addActionButton( 'skipCardButton', _('Skip and draw 2 cards'), 'onSkipClick' ); 
 				
 					break;
 					
