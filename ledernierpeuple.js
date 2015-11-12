@@ -29,6 +29,8 @@ function (dojo, declare) {
             // Example:
             // this.myGlobalValue = 0;
             
+            this.powerCardDescBase="<b>Power card</b><br/><br/>A power card can be used at the beginnig of a player's turn<br/>Effect of this card : ";
+            
             this.powerCardDesc = [];
             this.powerCardDesc[1] = "Steal 1 card from another player";
             this.powerCardDesc[2] = "Draw 1 move card and 1 power card";
@@ -42,6 +44,16 @@ function (dojo, declare) {
             this.powerCardDesc[10] = "Swap all your cards with those af another player";
             this.powerCardDesc[11] = "Play 2 turns";
             this.powerCardDesc[12] = "Steal 1 point from another player";
+            
+            this.moveCardDesc = "<b>Moving card</b><br/><br/>You can teleport a pawn to the tile indicates at the bottom or you can move a pawn from his position to +/- number of tiles";
+            this.moveCardDesc += "<br/><b>+</b> : Clockwise<br/><b>-</b> : Counter clockwise<br/>If the arrow is grey, the movement concerned one of your pawn";
+            this.moveCardDesc += "<br/>If the arrow is black, the movement concerned one component's pawn<br/>";
+            
+            this.tileCardDescBase = "<b>Tile card</b><br/><br/>";
+            this.tileCardDesc=[];
+            this.tileCardDesc[0] = "If two pawns surround a player's people tile, an event is triggered<br/>The player who trigger the event earns <b>2 points</b>, the helper earns <b>1 point</b> and the player surrounded lose <b>1 point</b>";
+            this.tileCardDesc[1] = "If a pawn stop on a 'Pioche' tile, the player can draw one power card";
+            this.tileCardDesc[2] = "People's tile";
 
         },
         
@@ -178,6 +190,17 @@ function (dojo, declare) {
 				}
 				
 	            angle += 360 / nbTiles;
+              
+              //set tooltip
+              var desc=this.tileCardDescBase;
+              if (idx % 4 == 2){
+                desc+=this.tileCardDesc[2];
+              } else if (idx % 4 == 1 || idx % 4 == 3){
+                desc+=this.tileCardDesc[0];
+              } else if (idx % 4 == 0){
+                desc+=this.tileCardDesc[1];
+              }
+              this.addTooltipHtml('tile_'+tiles[idx].id, desc, '' );
 	            
            }
            
@@ -381,12 +404,15 @@ function (dojo, declare) {
 	            } ) , 'cards' );
 	            
 	            if(cards[idx].cardType == "powerCard"){
-	            	var desc = this.powerCardDesc[cards[idx].id];
-	            	if(desc){
-	            		var idElem = "powerCard_"+cards[idx].id;
-	            		this.addTooltip(idElem, _(desc), '');	
-	            	}
-	            }
+                var desc = this.powerCardDescBase;
+	            	desc += this.powerCardDesc[cards[idx].id];	            	
+            		var idElem = "powerCard_"+cards[idx].id;
+            		this.addTooltipHtml(idElem, _(desc), '');
+                
+	            } else {
+                var idElem = "card_"+cards[idx].id;
+                this.addTooltipHtml(idElem, this.moveCardDesc, '' );
+              }
 	            //dojo.fx.slideTo({node:'card_'+cards[idx].id,top : top, left : left, unit: 'px', duration:1000, delay:2000}).play();
 	            //left+=120;
         	}
