@@ -147,7 +147,9 @@ class LeDernierPeuple extends Table
 			
 			//get the score of the current player
 			$sql = "SELECT player_score score FROM player where player_id=".$current_player_id;
-       		$result['players'][$current_player_id]["score"] = self::getUniqueValueFromDB( $sql );	
+        if(array_key_exists($current_player_id, $result['players'])){
+          $result['players'][$current_player_id]["score"] = self::getUniqueValueFromDB( $sql );	
+        }
 		}
         
         
@@ -164,6 +166,7 @@ class LeDernierPeuple extends Table
 		
 		//get the number of cards of each players
 		$allPlayerIds = array_keys($result['players']);
+    self::debug( "###Players IDs : ".implode(",",$allPlayerIds));
 		$sql = "select player_id, sum(nbCard) as nbCard from
 				(
 				select player_id, (select count(*) from powerCard where location=player_id) as nbCard from player

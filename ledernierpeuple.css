@@ -79,13 +79,17 @@
 	margin-right: 20px;
 }
 
+.spectatorMode #deck{
+	display:none;
+}
+
 .tile{
 	width: 74px; 
 	height: 100px;
 	background-image: url('img/tiles/all.jpg');
 	position: absolute;
 	background-repeat: no-repeat;
-	border : 1px solid #000000;
+	border-radius:5px;
 }
 
 .tile.possibleMove{
@@ -142,10 +146,12 @@
 
 .moveCard{
 	background-image: url('img/cards/all.jpg');
+	border-radius: 5px;
 }
 
 .powerCard{
 	background-image: url('img/powerCards/all.jpg');
+	border-radius: 5px;
 }
 
 .card.canChoose{
@@ -158,6 +164,7 @@
 	background-image: url('img/cards/all.jpg');
 	display:none;
 	position: absolute;
+	border-radius: 5px;
 }
 
 #chosenPowerCard{
@@ -166,6 +173,7 @@
 	background-image: url('img/powerCards/all.jpg');
 	position: absolute;
 	opacity: 0;
+	border-radius: 5px;
 }
 
 
@@ -173,5 +181,3 @@
 	color:red;
 	cursor:pointer;
 }
-
-
