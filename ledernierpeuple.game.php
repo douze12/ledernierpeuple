@@ -1678,6 +1678,9 @@ class LeDernierPeuple extends Table
 			
 			//new player ID
 			$newPlayerId = self::getActivePlayerId();
+      
+      //add extra time
+      self::giveExtraTime($newPlayerId);
 			
 			//check if the new player has been targeted by the mace power card
 			$macePlayerId = $this->readParameter("MACE_POWER");
