@@ -29,31 +29,32 @@ function (dojo, declare) {
             // Example:
             // this.myGlobalValue = 0;
             
-            this.powerCardDescBase="<b>Power card</b><br/><br/>A power card can be used at the beginnig of a player's turn<br/>Effect of this card : ";
+            this.powerCardDescBase= "<b>" + _("Power card") + "</b><br/><br/>" + _("A power card can be used at the beginnig of a player's turn") + "<br/>" + _("Effect of this card:") + " ";
             
             this.powerCardDesc = [];
-            this.powerCardDesc[1] = "Steal 1 card from another player";
-            this.powerCardDesc[2] = "Draw 1 move card and 1 power card";
-            this.powerCardDesc[3] = "Protect from an attack or a power card";
-            this.powerCardDesc[4] = "Earn 2 points";
-            this.powerCardDesc[5] = "Remove 1 card from another player";
-            this.powerCardDesc[6] = "Skip the turn of another player";
-            this.powerCardDesc[7] = "Switch 2 pawns";
-            this.powerCardDesc[8] = "Earn 1 point";
-            this.powerCardDesc[9] = "Remove 1 point from another player";
-            this.powerCardDesc[10] = "Swap all your cards with those af another player";
-            this.powerCardDesc[11] = "Play 2 turns";
-            this.powerCardDesc[12] = "Steal 1 point from another player";
+            this.powerCardDesc[1] = _("Steal 1 card from another player");
+            this.powerCardDesc[2] = _("Draw 1 move card and 1 power card");
+            this.powerCardDesc[3] = _("Protect from an attack or a power card");
+            this.powerCardDesc[4] = _("Earn 2 points");
+            this.powerCardDesc[5] = _("Remove 1 card from another player");
+            this.powerCardDesc[6] = _("Skip the turn of another player");
+            this.powerCardDesc[7] = _("Switch 2 pawns");
+            this.powerCardDesc[8] = _("Earn 1 point");
+            this.powerCardDesc[9] = _("Remove 1 point from another player");
+            this.powerCardDesc[10] = _("Swap all your cards with those af another player");
+            this.powerCardDesc[11] = _("Play 2 turns");
+            this.powerCardDesc[12] = _("Steal 1 point from another player");
             
-            this.moveCardDesc = "<b>Moving card</b><br/><br/>You can teleport a pawn to the tile indicates at the bottom or you can move a pawn from his position to +/- number of tiles";
-            this.moveCardDesc += "<br/><b>+</b> : Clockwise<br/><b>-</b> : Counter clockwise<br/>If the arrow is grey, the movement concerned one of your pawn";
-            this.moveCardDesc += "<br/>If the arrow is black, the movement concerned one component's pawn<br/>";
+            this.moveCardDesc = "<b>" + _("Moving card") + "</b><br/><br/>"
+									  + _("You can teleport a pawn to the tile indicated at the bottom or you can move a pawn from his position to +/- number of tiles")
+									  + "<br/>" + _("<b>+</b> : clockwise") + "<br/>" + _("<b>-</b> : counter clockwise") + "<br/>" + _("If the arrow is grey, the movement concerned one of your pawns")
+									  + "<br/>" + _("If the arrow is black, the movement concerned one component's pawn");
             
-            this.tileCardDescBase = "<b>Tile card</b><br/><br/>";
+            this.tileCardDescBase = "<b>" + _("Tile card") + "</b><br/><br/>";
             this.tileCardDesc=[];
-            this.tileCardDesc[0] = "If two pawns surround a player's people tile, an event is triggered<br/>The player who trigger the event earns <b>2 points</b>, the helper earns <b>1 point</b> and the player surrounded lose <b>1 point</b>";
-            this.tileCardDesc[1] = "If a pawn stop on a 'Pioche' tile, the player can draw one power card";
-            this.tileCardDesc[2] = "People's tile";
+            this.tileCardDesc[0] = _("If two pawns surround a player's people tile, an event is triggered") + "<br/>" + _("The player who triggers the event earns <b>2 points</b>, the helper earns <b>1 point</b> and the player surrounded loses <b>1 point</b>");
+            this.tileCardDesc[1] = _("If a pawn stops on a 'Pioche' tile, the player can draw one power card");
+            this.tileCardDesc[2] = _("People's tile");
 
         },
         

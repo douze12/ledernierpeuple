@@ -41,8 +41,22 @@ $this->speciesNames = array(
 	6 => clienttranslate("Peuple 6")
 );*/
 
-$this->card_types = array();
-$this->test = "aaa";
+// For translation purposes
+$this->card_types = array(
+	clienttranslate("bandit"),
+	clienttranslate("blackMagic"),
+	clienttranslate("mace"),
+	clienttranslate("curse"),
+	clienttranslate("barter"),
+	clienttranslate("thief"),
+	clienttranslate("defense"),
+	clienttranslate("switch"),
+	clienttranslate("luck"),
+	clienttranslate("strength"),
+	clienttranslate("heal"),
+	clienttranslate("speed"),	
+);
+
 
 
 

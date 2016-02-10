@@ -198,8 +198,8 @@ class LeDernierPeuple extends Table
 		self::DbQuery( $sql );
 		
 		//notify the player
-		self::notifyAllPlayers( "playDisc", clienttranslate( '${playerName} choses a card' ), array(
-                'playerName' => $playerName
+		self::notifyAllPlayers( "playDisc", clienttranslate( '${player_name} choses a card' ), array(
+                'player_name' => $playerName
             ) );
 			
 		//the card is chosen, we can move to the next state
@@ -231,8 +231,8 @@ class LeDernierPeuple extends Table
 		}
 		
 		
-		$this->log('${playerName} skips his turn and draws ${nbCard} cards', 
-					array("playerName"=>$playerName, "nbCard" => $nbCardToDraw));
+		$this->log( clienttranslate('${player_name} skips his turn and draws ${nbCard} cards'), 
+					array("player_name" =>$playerName, "nbCard" => $nbCardToDraw));
 					
 		$this->drawCard($nbCardToDraw, $playerId);
 		
@@ -271,8 +271,8 @@ class LeDernierPeuple extends Table
 		
 		//notify the players unless it's the power card defense
 		if($powerCard["name"] != "defense"){
-			$this->log('${playerName} uses the power card <b>${cardName}</b>', 
-					array("playerName"=>$playerName, "cardName" => $powerCard["name"]));
+			$this->log( clienttranslate('${player_name} uses the <b>${cardName}</b> power card'),
+					array("i18n" => array("cardName"), "player_name" =>$playerName, "cardName" => $powerCard["name"]));
 		}
 		
 		self::notifyAllPlayers( "powerCardChosen", "", array('cardId' => $cardId));
@@ -320,8 +320,8 @@ class LeDernierPeuple extends Table
 				self::DbQuery( $sql );
 				
 				//log
-				$this->log('Player ${playerName} earns ${nbPoints} point(s)', 
-							array("playerName" => $playerName, "nbPoints" => $nbPoints));	
+				$this->log( clienttranslate('Player ${player_name} earns ${nbPoints} point(s)'), 
+							array("player_name" => $playerName, "nbPoints" => $nbPoints));	
 				
 				$this->notifNewScores(array($playerId));
 				
@@ -380,9 +380,9 @@ class LeDernierPeuple extends Table
 		}
 		
 		//notify the player
-		self::notifyAllPlayers( "movePawn", clienttranslate( '${playerName} move a pawn on tile ${tileId}' ), array(
+		self::notifyAllPlayers( "movePawn", clienttranslate( '${player_name} move a pawn on tile ${tileId}' ), array(
                 'playerId' => $playerId,
-                'playerName' => $playerName,
+                'player_name' => $playerName,
                 'tileId' => $tileId,
                 'pawnId' => $pawnId
             ) );
@@ -626,16 +626,16 @@ class LeDernierPeuple extends Table
 				$sql="update player set player_score=player_score+".$point." where player_id=".$id;
 				self::DbQuery( $sql );
 				//log
-				$this->log('Player ${playerName} earns ${points} point(s)', 
-							array("playerName" => $playerNames[$id], "points" => $point));	
+				$this->log( clienttranslate('Player ${player_name} earns ${points} point(s)'), 
+							array("player_name" => $playerNames[$id], "points" => $point));	
 			}
 			else if ($point < 0){
 				//update the score
 				$sql="update player set player_score=player_score".$point." where player_id=".$id." and player_score > 0";
 				self::DbQuery( $sql );
 				//log
-				$this->log('Player ${playerName} loses ${points} point(s)', 
-							array("playerName" => $playerNames[$id], "points" => abs($point)));
+				$this->log( clienttranslate('Player ${player_name} loses ${points} point(s)'), 
+							array("player_name" => $playerNames[$id], "points" => abs($point)));
 			}
 			
 			//notify the new score to the player concerned
@@ -647,8 +647,8 @@ class LeDernierPeuple extends Table
 
 		//notify everybody than the player attacked had the power card defense
 		if($defense){
-			$this->log('Player ${playerName} is protected by the power card defense', 
-							array("playerName" => $playerAttacked["name"]));
+			$this->log( clienttranslate('Player ${player_name} is protected by the <b>defense</b> power card'), 
+							array("player_name" => $playerAttacked["name"]));
 		}
 		
         
@@ -683,8 +683,8 @@ class LeDernierPeuple extends Table
 				$teleport[] = array("pawnId"=>$pawn["id"], "tileId" => $card["teleportTile"]);
 				$cardIds[] = $card["id"];
 				
-				$this->log('${pawnPlayerName}\'s pawn is teleported on tile ${tileId}', 
-							array('pawnPlayerName' => $pawnPlayerName, "tileId" => $card["teleportTile"]));
+				$this->log( clienttranslate('${player_name}\'s pawn is teleported on tile ${tileId}'), 
+							array('player_name' => $pawnPlayerName, "tileId" => $card["teleportTile"]));
 			}
 			
 			//put the cards in the trash
@@ -723,7 +723,7 @@ class LeDernierPeuple extends Table
 		}
 		
 		//get $nbCard random cards
-		$sql = "select *, '".$table."' as cardType from ".$table." where location='DECK' order by rand() LIMIT 0,".$nbCard;
+		$sql = "select *, '".($table == "card" ? "moveCard" : $table)."' as cardType from ".$table." where location='DECK' order by rand() LIMIT 0,".$nbCard;
 		
 		$newCards = self::getObjectListFromDB($sql);
 		
@@ -759,7 +759,7 @@ class LeDernierPeuple extends Table
 		}
 		else{
 			//notify the player no more cards are available
-			$this->log("No more cards are available", array());
+			$this->log( clienttranslate("No more cards are available"), array());
 		}
 		
 		
@@ -796,7 +796,7 @@ class LeDernierPeuple extends Table
 		}
 		else{
 			//notify the player no more power cards are available
-			$this->log("No more power cards are available", array());
+			$this->log( clienttranslate("No more power cards are available"), array());
 		}
 		
 		$this->notifyNewNbOfCards($playerId);
@@ -909,7 +909,7 @@ class LeDernierPeuple extends Table
 	 * Get all the cards in a player's deck
 	 */
 	function getAllCardsOf($playerId){
-		$sql =	"SELECT id,'card' as cardType from card where chosen=0 and location=".$playerId.
+		$sql =	"SELECT id,'moveCard' as cardType from card where chosen=0 and location=".$playerId.
 						" union all".
 						" select id,'powerCard' as cardType from powerCard where chosen=0 and location=".$playerId;
 				
@@ -945,8 +945,8 @@ class LeDernierPeuple extends Table
 		$chosenCard = $this->getRandomCardInDeckOf($targetedPlayer["player_id"]);
 		
 		if($chosenCard == NULL){
-			$this->log('${playerName} try to steal a card from ${targetedPlayer} but he\'s got no card', 
-					array("playerName" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
+			$this->log( clienttranslate('${player_name} tries to steal a card from ${targetedPlayer} but ${targetedPlayer} has got no card'), 
+					array("player_name" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
 			return;
 		}
 		
@@ -965,8 +965,8 @@ class LeDernierPeuple extends Table
 			));
 			
 		//log the action
-		$this->log('${playerName} steals a card from ${targetedPlayer}', 
-					array("playerName" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
+		$this->log( clienttranslate('${player_name} steals a card from ${targetedPlayer}'), 
+					array("player_name" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
 		
 		//notify the new number of cards of the two concerned players
 		$this->notifyNewNbOfCards($playerId);
@@ -980,8 +980,8 @@ class LeDernierPeuple extends Table
 		$chosenCard = $this->getRandomCardInDeckOf($targetedPlayer["player_id"]);
 		
 		if($chosenCard == NULL){
-			$this->log('${playerName} tries to destroy a card from ${targetedPlayer} but he\'s got no card', 
-					array("playerName" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
+			$this->log( clienttranslate('${player_name} tries to destroy a card from ${targetedPlayer} but ${targetedPlayer} has got no card'),
+					array("player_name" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
 			return;
 		}
 		
@@ -995,8 +995,8 @@ class LeDernierPeuple extends Table
 			));	
 			
 		//log the action
-		$this->log('${playerName} destroys a card from ${targetedPlayer}', 
-					array("playerName" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
+		$this->log( clienttranslate('${player_name} destroys a card from ${targetedPlayer}'), 
+					array("player_name" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
 		
 		//notify the new number of cards of the targeted player
 		$this->notifyNewNbOfCards($targetedPlayer["player_id"]);
@@ -1008,8 +1008,8 @@ class LeDernierPeuple extends Table
 	 */
 	function playPowerCardMace($targetedPlayer, $playerName){
 		$this->createPublicParameter("MACE_POWER", $targetedPlayer["player_id"]);
-		$this->log('${playerName} uses mace on ${targetedPlayer}', 
-					array("playerName" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
+		$this->log( clienttranslate('${player_name} uses the <b>mace</b> power card on ${targetedPlayer}'), 
+					array("player_name" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
 	}
 	
 	
@@ -1023,8 +1023,8 @@ class LeDernierPeuple extends Table
 		$currentPoints = self::getUniqueValueFromDB($sql);
 
 		if($currentPoints <= 0){
-			$this->log('${playerName} tries to remove a point from ${targetedPlayer} but he\'s got no point', 
-					array("playerName" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
+			$this->log( clienttranslate('${player_name} tries to remove a point from ${targetedPlayer} but ${targetedPlayer} has got no point'), 
+					array("player_name" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
 			return;
 		}
 		
@@ -1034,8 +1034,8 @@ class LeDernierPeuple extends Table
 		//notify the new scores
 		$this->notifNewScores(array($targetedPlayer["player_id"]));
 
-		$this->log('${playerName} removes a point from ${targetedPlayer}', 
-					array("playerName" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
+		$this->log( clienttranslate('${player_name} removes a point from ${targetedPlayer}'), 
+					array("player_name" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
 	}
 
 
@@ -1049,8 +1049,8 @@ class LeDernierPeuple extends Table
 		$currentPoints = self::getUniqueValueFromDB($sql);
 
 		if($currentPoints <= 0){
-			$this->log('${playerName} tries to steal a point from ${targetedPlayer} but he\'s got no point', 
-					array("playerName" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
+			$this->log( clienttranslate('${player_name} tries to steal a point from ${targetedPlayer} but ${targetedPlayer} has got no point'), 
+					array("player_name" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
 			return;
 		}
 		
@@ -1062,8 +1062,8 @@ class LeDernierPeuple extends Table
 		//notify the new scores
 		$this->notifNewScores(array($playerId, $targetedPlayer["player_id"]));
 		
-		$this->log('${playerName} steals a point from ${targetedPlayer}', 
-					array("playerName" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
+		$this->log( clienttranslate('${player_name} steals a point from ${targetedPlayer}'), 
+					array("player_name" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
 	}
 
 
@@ -1152,8 +1152,8 @@ class LeDernierPeuple extends Table
 		
 			
 		//log the action
-		$this->log('${playerName} and ${targetedPlayer} switch their cards', 
-					array("playerName" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
+		$this->log( clienttranslate('${player_name} and ${targetedPlayer} switch their cards'), 
+					array("player_name" => $playerName, "targetedPlayer" => $targetedPlayer["player_name"]));
 		
 		//notify the new number of cards of the two concerned players
 		$this->notifyNewNbOfCards($playerId);
@@ -1177,8 +1177,8 @@ class LeDernierPeuple extends Table
 		$defensePlayer = $this->readParameter("DEFENSE_POWER");
 		if($defensePlayer && $defensePlayer == $targetedPlayer["player_id"]){
 			$this->destroyParameter("DEFENSE_POWER");
-			$this->log('Player ${playerName} is protected by the power card defense', 
-							array("playerName" => $targetedPlayer["player_name"]));
+			$this->log( clienttranslate('Player ${player_name} is protected by the <b>defense</b> power card'),
+							array("player_name" => $targetedPlayer["player_name"]));
 			$this->gamestate->nextState( "targetChosen" );
 			return;
 		}
@@ -1249,9 +1249,9 @@ class LeDernierPeuple extends Table
 		
 		
 		//notify the players
-		self::notifyAllPlayers( "movePawn", clienttranslate( '${playerName} switch two pawns position' ), array(
+		self::notifyAllPlayers( "movePawn", clienttranslate( '${player_name} switch two pawns position' ), array(
                 'playerId' => $playerId,
-                'playerName' => $playerName,
+                'player_name' => $playerName,
                 'tileId' => $secondPawnTile,
                 'pawnId' => $firstPawnId
             ) );
@@ -1278,7 +1278,7 @@ class LeDernierPeuple extends Table
 	 * Log a message in the players' message boxes
 	 */
 	function log($msg, $params){
-		self::notifyAllPlayers( "log", clienttranslate($msg), $params);
+		self::notifyAllPlayers( "log", $msg, $params);
 	}
 	
 	
@@ -1686,8 +1686,8 @@ class LeDernierPeuple extends Table
 			$macePlayerId = $this->readParameter("MACE_POWER");
 			if($macePlayerId && $macePlayerId == $newPlayerId){
 				$newPlayerName = self::getActivePlayerName();
-				$this->log('${playerName} is affected by the mace power card, he skips his turn', 
-					array("playerName" => $newPlayerName));
+				$this->log( clienttranslate('${player_name} is affected by the <b>mace</b> power card, he skips his turn'), 
+					array("player_name" => $newPlayerName));
 				
 				$this->activeNextPlayer();
 				$this->destroyParameter("MACE_POWER");
