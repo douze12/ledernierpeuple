@@ -951,7 +951,7 @@ class LeDernierPeuple extends Table
 		}
 		
 		//get the first card and place it in the current player's deck
-		$sql="update ".$chosenCard["cardType"]." set location=".$playerId." where id=".$chosenCard["id"];
+		$sql="update ".($chosenCard["cardType"] == "moveCard" ? "card" : "powerCard")." set location=".$playerId." where id=".$chosenCard["id"];
 		self::DbQuery( $sql );	
 		
 		//notify the player he loses a card 
@@ -986,7 +986,7 @@ class LeDernierPeuple extends Table
 		}
 		
 		//get the first card and place it in the current player's deck
-		$sql="update ".$chosenCard["cardType"]." set location='TRASH' where id=".$chosenCard["id"];
+		$sql="update ".($chosenCard["cardType"] == "moveCard" ? "card" : "powerCard")." set location='TRASH' where id=".$chosenCard["id"];
 		self::DbQuery( $sql );	
 		
 		//notify the player he loses a card 
