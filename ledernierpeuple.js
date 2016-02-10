@@ -411,7 +411,7 @@ function (dojo, declare) {
             		this.addTooltipHtml(idElem, _(desc), '');
                 
 	            } else {
-                var idElem = "card_"+cards[idx].id;
+                var idElem = "moveCard_"+cards[idx].id;
                 this.addTooltipHtml(idElem, this.moveCardDesc, '' );
               }
 	            //dojo.fx.slideTo({node:'card_'+cards[idx].id,top : top, left : left, unit: 'px', duration:1000, delay:2000}).play();
@@ -808,7 +808,7 @@ function (dojo, declare) {
 	            //remove the card chosen    
 	            dojo.fadeOut({node: event.currentTarget.id,
 	            			onEnd : function(){
-	            				dojo.destroy("card_"+cardId);
+	            				dojo.destroy("moveCard_"+cardId);
 	            			}
 	            	}).play();
 	            

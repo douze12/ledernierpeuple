@@ -1087,7 +1087,7 @@ class LeDernierPeuple extends Table
 				if($card["cardType"] == "powerCard"){
 					$powerCardIds[] = $card["id"];
 				}
-				else if($card["cardType"] == "card"){
+				else if($card["cardType"] == "moveCard"){
 					$cardIds[] = $card["id"];
 				}
 			}
@@ -1124,7 +1124,7 @@ class LeDernierPeuple extends Table
 				if($card["cardType"] == "powerCard"){
 					$powerCardIds[] = $card["id"];
 				}
-				else if($card["cardType"] == "card"){
+				else if($card["cardType"] == "moveCard"){
 					$cardIds[] = $card["id"];
 				}
 			}
